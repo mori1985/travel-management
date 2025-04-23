@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   // 'level1', 'level2', 'admin'
+  createdAt DateTime @default(now())
+  passengers Passenger[]
+}
+
+model Passenger {
+  id          Int      @id @default(autoincrement())
+  name        String
+  lastname    String
+  gender      String
+  phone       String
+  nationalId  String   @unique
+  travelDate  DateTime
+  returnDate  DateTime?
+  birthDate   DateTime
+  travelType  String   // 'normal', 'vip'
+  leaderName  String?
+  leaderPhone String?
+  createdById Int
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  packId      Int?
+  pack        Pack?    @relation(fields: [packId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([travelDate])
+}
+
+model Pack {
+  id           Int        @id @default(autoincrement())
+  travelDate   DateTime
+  type         String     // 'normal', 'vip'
+  repository   Int        // 1, 2, 3
+  passengers   Passenger[]
+  company      String?
+  plate        String?
+  driver       String?
+  driverPhone  String?
+  createdAt    DateTime   @default(now())
+  smsHistory   SmsHistory[]
+
+  @@index([travelDate])
+}
+
+model SmsHistory {
+  id        Int      @id @default(autoincrement())
+  packId    Int
+  pack      Pack     @relation(fields: [packId], references: [id])
+  text      String
+  sentAt    DateTime
+  count     Int
+  createdAt DateTime @default(now())
+}
