@@ -17,11 +17,20 @@ let AppController = class AppController {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    getHello() {
+        return { message: 'Hello World!' };
+    }
     async test() {
         return await this.prisma.user.findMany();
     }
 };
 exports.AppController = AppController;
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Object)
+], AppController.prototype, "getHello", null);
 __decorate([
     (0, common_1.Get)('test'),
     __metadata("design:type", Function),
