@@ -1,0 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.jwtConstants = void 0;
+exports.jwtConstants = {
+    secret: 's3cr3tK3y!2025TravelMngmnt',
+};
+//# sourceMappingURL=jwt.constants.js.map
