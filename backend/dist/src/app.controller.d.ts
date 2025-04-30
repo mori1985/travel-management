@@ -12,4 +12,8 @@ export declare class AppController {
         role: string;
         createdAt: Date;
     }[]>;
+    getProtected(req: any): {
+        message: string;
+        user: any;
+    };
 }
