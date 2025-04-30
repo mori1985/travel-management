@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Request, UseGuards, Query } from '@nestjs/common';
 import { PacksService } from './packs.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePackDto } from './dto/create-pack.dto';
@@ -15,8 +15,12 @@ export class PacksController {
   }
 
   @Get()
-  findAll() {
-    return this.packsService.findAll();
+  findAll(
+    @Query('type') type?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.packsService.findAll({ type, startDate, endDate });
   }
 
   @Get(':id')

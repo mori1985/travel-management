@@ -25,8 +25,19 @@ export class PacksService {
     });
   }
 
-  async findAll(): Promise<Pack[]> {
+  async findAll(filters: { type?: string; startDate?: string; endDate?: string }): Promise<Pack[]> {
+    const where: Prisma.PackWhereInput = {};
+    if (filters.type) {
+      where.type = filters.type;
+    }
+    if (filters.startDate && filters.endDate) {
+      where.travelDate = {
+        gte: new Date(filters.startDate),
+        lte: new Date(filters.endDate),
+      };
+    }
     return this.prisma.pack.findMany({
+      where,
       include: { passengers: true },
     });
   }

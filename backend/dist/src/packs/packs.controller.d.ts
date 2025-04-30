@@ -6,6 +6,7 @@ export declare class PacksController {
     constructor(packsService: PacksService);
     create(createPackDto: CreatePackDto, req: any): Promise<{
         id: number;
+        createdAt: Date;
         travelDate: Date;
         type: string;
         repository: number;
@@ -13,10 +14,10 @@ export declare class PacksController {
         plate: string | null;
         driver: string | null;
         driverPhone: string | null;
-        createdAt: Date;
     }>;
-    findAll(): Promise<{
+    findAll(type?: string, startDate?: string, endDate?: string): Promise<{
         id: number;
+        createdAt: Date;
         travelDate: Date;
         type: string;
         repository: number;
@@ -24,10 +25,10 @@ export declare class PacksController {
         plate: string | null;
         driver: string | null;
         driverPhone: string | null;
-        createdAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: number;
+        createdAt: Date;
         travelDate: Date;
         type: string;
         repository: number;
@@ -35,11 +36,11 @@ export declare class PacksController {
         plate: string | null;
         driver: string | null;
         driverPhone: string | null;
-        createdAt: Date;
     } | null>;
     findPassengers(id: string): Promise<({
         pack: {
             id: number;
+            createdAt: Date;
             travelDate: Date;
             type: string;
             repository: number;
@@ -47,34 +48,34 @@ export declare class PacksController {
             plate: string | null;
             driver: string | null;
             driverPhone: string | null;
-            createdAt: Date;
         } | null;
         createdBy: {
             id: number;
-            createdAt: Date;
             username: string;
             password: string;
             role: string;
+            createdAt: Date;
         };
     } & {
-        name: string;
         id: number;
-        travelDate: Date;
         createdAt: Date;
+        name: string;
         lastname: string;
         gender: string;
         phone: string;
         nationalId: string;
+        travelDate: Date;
         returnDate: Date | null;
         birthDate: Date;
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        createdById: number;
         packId: number | null;
+        createdById: number;
     })[]>;
     update(id: string, updatePackDto: UpdatePackDto, req: any): Promise<{
         id: number;
+        createdAt: Date;
         travelDate: Date;
         type: string;
         repository: number;
@@ -82,10 +83,10 @@ export declare class PacksController {
         plate: string | null;
         driver: string | null;
         driverPhone: string | null;
-        createdAt: Date;
     }>;
     remove(id: string, req: any): Promise<{
         id: number;
+        createdAt: Date;
         travelDate: Date;
         type: string;
         repository: number;
@@ -93,6 +94,5 @@ export declare class PacksController {
         plate: string | null;
         driver: string | null;
         driverPhone: string | null;
-        createdAt: Date;
     }>;
 }

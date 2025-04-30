@@ -21,7 +21,7 @@ export declare class PassengersController {
         packId: number | null;
         createdById: number;
     }>;
-    findAll(): Promise<{
+    findAll(travelType?: string, startDate?: string, endDate?: string): Promise<{
         id: number;
         createdAt: Date;
         name: string;

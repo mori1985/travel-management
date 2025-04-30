@@ -26,8 +26,8 @@ let PassengersController = class PassengersController {
     create(createPassengerDto, req) {
         return this.passengersService.create(createPassengerDto, req.user.role, req.user.userId);
     }
-    findAll() {
-        return this.passengersService.findAll();
+    findAll(travelType, startDate, endDate) {
+        return this.passengersService.findAll({ travelType, startDate, endDate });
     }
     findOne(id) {
         return this.passengersService.findOne(+id);
@@ -50,8 +50,11 @@ __decorate([
 ], PassengersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('travelType')),
+    __param(1, (0, common_1.Query)('startDate')),
+    __param(2, (0, common_1.Query)('endDate')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], PassengersController.prototype, "findAll", null);
 __decorate([

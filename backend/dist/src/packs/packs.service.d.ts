@@ -6,7 +6,11 @@ export declare class PacksService {
     private prisma;
     constructor(prisma: PrismaService);
     create(data: CreatePackDto, userRole: string): Promise<Pack>;
-    findAll(): Promise<Pack[]>;
+    findAll(filters: {
+        type?: string;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<Pack[]>;
     findOne(id: number): Promise<Pack | null>;
     findPassengers(id: number): Promise<Prisma.PassengerGetPayload<{
         include: {

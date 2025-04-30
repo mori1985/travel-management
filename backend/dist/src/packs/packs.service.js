@@ -33,8 +33,19 @@ let PacksService = class PacksService {
             },
         });
     }
-    async findAll() {
+    async findAll(filters) {
+        const where = {};
+        if (filters.type) {
+            where.type = filters.type;
+        }
+        if (filters.startDate && filters.endDate) {
+            where.travelDate = {
+                gte: new Date(filters.startDate),
+                lte: new Date(filters.endDate),
+            };
+        }
         return this.prisma.pack.findMany({
+            where,
             include: { passengers: true },
         });
     }

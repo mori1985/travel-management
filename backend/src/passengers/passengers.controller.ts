@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Request, UseGuards, Query } from '@nestjs/common';
 import { PassengersService } from './passengers.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePassengerDto } from './dto/create-passenger.dto';
@@ -15,8 +15,12 @@ export class PassengersController {
   }
 
   @Get()
-  findAll() {
-    return this.passengersService.findAll();
+  findAll(
+    @Query('travelType') travelType?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.passengersService.findAll({ travelType, startDate, endDate });
   }
 
   @Get(':id')

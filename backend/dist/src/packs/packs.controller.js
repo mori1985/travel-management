@@ -26,8 +26,8 @@ let PacksController = class PacksController {
     create(createPackDto, req) {
         return this.packsService.create(createPackDto, req.user.role);
     }
-    findAll() {
-        return this.packsService.findAll();
+    findAll(type, startDate, endDate) {
+        return this.packsService.findAll({ type, startDate, endDate });
     }
     findOne(id) {
         return this.packsService.findOne(+id);
@@ -53,8 +53,11 @@ __decorate([
 ], PacksController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('type')),
+    __param(1, (0, common_1.Query)('startDate')),
+    __param(2, (0, common_1.Query)('endDate')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], PacksController.prototype, "findAll", null);
 __decorate([

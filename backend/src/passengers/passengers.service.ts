@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma, Passenger } from '@prisma/client';
 import { CreatePassengerDto } from './dto/create-passenger.dto';
@@ -11,27 +11,45 @@ export class PassengersService {
     if (userRole !== 'level1' && userRole !== 'admin') {
       throw new ForbiddenException('Only level1 or admin can create passengers');
     }
-    return this.prisma.passenger.create({
-      data: {
-        name: data.name,
-        lastname: data.lastname,
-        gender: data.gender,
-        phone: data.phone,
-        nationalId: data.nationalId,
-        travelDate: new Date(data.travelDate),
-        returnDate: data.returnDate ? new Date(data.returnDate) : null,
-        birthDate: new Date(data.birthDate),
-        travelType: data.travelType,
-        leaderName: data.leaderName,
-        leaderPhone: data.leaderPhone,
-        packId: data.packId,
-        createdById: userId,
-      },
-    });
+    try {
+      return await this.prisma.passenger.create({
+        data: {
+          name: data.name,
+          lastname: data.lastname,
+          gender: data.gender,
+          phone: data.phone,
+          nationalId: data.nationalId,
+          travelDate: new Date(data.travelDate),
+          returnDate: data.returnDate ? new Date(data.returnDate) : null,
+          birthDate: new Date(data.birthDate),
+          travelType: data.travelType,
+          leaderName: data.leaderName,
+          leaderPhone: data.leaderPhone,
+          packId: data.packId,
+          createdById: userId,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException(`Passenger with nationalId ${data.nationalId} already exists`);
+      }
+      throw error;
+    }
   }
 
-  async findAll(): Promise<Passenger[]> {
+  async findAll(filters: { travelType?: string; startDate?: string; endDate?: string }): Promise<Passenger[]> {
+    const where: Prisma.PassengerWhereInput = {};
+    if (filters.travelType) {
+      where.travelType = filters.travelType;
+    }
+    if (filters.startDate && filters.endDate) {
+      where.travelDate = {
+        gte: new Date(filters.startDate),
+        lte: new Date(filters.endDate),
+      };
+    }
     return this.prisma.passenger.findMany({
+      where,
       include: { pack: true, createdBy: true },
     });
   }
