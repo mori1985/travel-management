@@ -5,8 +5,9 @@ export declare class PassengersController {
     private readonly passengersService;
     constructor(passengersService: PassengersService);
     create(createPassengerDto: CreatePassengerDto, req: any): Promise<{
-        name: string;
         id: number;
+        createdAt: Date;
+        name: string;
         lastname: string;
         gender: string;
         phone: string;
@@ -17,13 +18,13 @@ export declare class PassengersController {
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        createdById: number;
         packId: number | null;
-        createdAt: Date;
+        createdById: number;
     }>;
     findAll(): Promise<{
-        name: string;
         id: number;
+        createdAt: Date;
+        name: string;
         lastname: string;
         gender: string;
         phone: string;
@@ -34,13 +35,13 @@ export declare class PassengersController {
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        createdById: number;
         packId: number | null;
-        createdAt: Date;
+        createdById: number;
     }[]>;
     findOne(id: string): Promise<{
-        name: string;
         id: number;
+        createdAt: Date;
+        name: string;
         lastname: string;
         gender: string;
         phone: string;
@@ -51,13 +52,13 @@ export declare class PassengersController {
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        createdById: number;
         packId: number | null;
-        createdAt: Date;
+        createdById: number;
     } | null>;
     update(id: string, data: Prisma.PassengerUpdateInput, req: any): Promise<{
-        name: string;
         id: number;
+        createdAt: Date;
+        name: string;
         lastname: string;
         gender: string;
         phone: string;
@@ -68,13 +69,13 @@ export declare class PassengersController {
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        createdById: number;
         packId: number | null;
-        createdAt: Date;
+        createdById: number;
     }>;
     remove(id: string, req: any): Promise<{
-        name: string;
         id: number;
+        createdAt: Date;
+        name: string;
         lastname: string;
         gender: string;
         phone: string;
@@ -85,8 +86,7 @@ export declare class PassengersController {
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        createdById: number;
         packId: number | null;
-        createdAt: Date;
+        createdById: number;
     }>;
 }
