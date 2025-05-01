@@ -19,8 +19,9 @@ const Login = () => {
       });
       setToken(response.data.access_token);
       navigate('/packs');
-    } catch (err) {
-      setError('Login failed. Check your credentials.');
+    } catch (err: any) {
+      console.error('Login error:', err.response?.data || err.message);
+      setError(`Login failed: ${err.response?.data?.message || err.message}`);
     }
   };
 
