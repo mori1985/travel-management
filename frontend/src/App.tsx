@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import Packs from './components/Packs';
+import CreatePack from './components/CreatePack';
 
 function App() {
   return (
@@ -9,6 +10,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/packs" element={<Packs />} />
+        <Route path="/packs/create" element={<CreatePack />} />
+
       </Routes>
     </BrowserRouter>
   );

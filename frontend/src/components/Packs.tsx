@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 interface Pack {
   id: number;
@@ -16,6 +17,7 @@ interface Pack {
 const Packs = () => {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [typeFilter, setTypeFilter] = useState('');
+  const [error, setError] = useState('');
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
@@ -26,8 +28,10 @@ const Packs = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPacks(response.data);
-      } catch (err) {
-        console.error('Failed to fetch packs:', err);
+        setError('');
+      } catch (err: any) {
+        console.error('Fetch packs error:', err.response?.data || err.message);
+        setError('Failed to load packs. Please try again.');
       }
     };
     if (token) fetchPacks();
@@ -36,17 +40,26 @@ const Packs = () => {
   return (
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Packs</h2>
-      <div className="mb-4">
-        <label className="mr-2">Filter by Type:</label>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="p-2 border rounded"
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <div className="mb-4 flex justify-between">
+        <div>
+          <label className="mr-2">Filter by Type:</label>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="p-2 border rounded"
+          >
+            <option value="">All</option>
+            <option value="normal">Normal</option>
+            <option value="vip">VIP</option>
+          </select>
+        </div>
+        <Link
+          to="/packs/create"
+          className="bg-green-500 text-white p-2 rounded hover:bg-green-600"
         >
-          <option value="">All</option>
-          <option value="normal">Normal</option>
-          <option value="vip">VIP</option>
-        </select>
+          Create New Pack
+        </Link>
       </div>
       <table className="w-full border">
         <thead>
