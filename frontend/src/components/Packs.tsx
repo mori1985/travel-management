@@ -20,6 +20,10 @@ const Packs = () => {
   const [error, setError] = useState('');
   const { token } = useContext(AuthContext);
 
+  const translateType = (type: string) => {
+    return type === 'normal' ? 'عادی' : type === 'vip' ? 'ویژه' : type;
+  };
+
   useEffect(() => {
     const fetchPacks = async () => {
       try {
@@ -31,7 +35,7 @@ const Packs = () => {
         setError('');
       } catch (err: any) {
         console.error('Fetch packs error:', err.response?.data || err.message);
-        setError('Failed to load packs. Please try again.');
+        setError('خطا در بارگذاری پک‌ها. لطفاً دوباره تلاش کنید.');
       }
     };
     if (token) fetchPacks();
@@ -39,44 +43,46 @@ const Packs = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Packs</h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <h2 className="text-2xl font-bold mb-4 text-right">پک‌های مسافرتی</h2>
+      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
       <div className="mb-4 flex justify-between">
         <div>
-          <label className="mr-2">Filter by Type:</label>
+          <label className="ml-2">فیلتر بر اساس نوع:</label>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             className="p-2 border rounded"
           >
-            <option value="">All</option>
-            <option value="normal">Normal</option>
-            <option value="vip">VIP</option>
+            <option value="">همه</option>
+            <option value="normal">عادی</option>
+            <option value="vip">ویژه</option>
           </select>
         </div>
         <Link
           to="/packs/create"
           className="bg-green-500 text-white p-2 rounded hover:bg-green-600"
         >
-          Create New Pack
+          ایجاد پک جدید
         </Link>
       </div>
       <table className="w-full border">
         <thead>
           <tr className="bg-gray-200">
-            <th className="p-2 border">ID</th>
-            <th className="p-2 border">Type</th>
-            <th className="p-2 border">Travel Date</th>
-            <th className="p-2 border">Company</th>
+            <th className="p-2 border text-right">شناسه</th>
+            <th className="p-2 border text-right">نوع</th>
+            <th className="p-2 border text-right">تاریخ سفر</th>
+            <th className="p-2 border text-right">شرکت</th>
           </tr>
         </thead>
         <tbody>
           {packs.map((pack) => (
             <tr key={pack.id}>
-              <td className="p-2 border">{pack.id}</td>
-              <td className="p-2 border">{pack.type}</td>
-              <td className="p-2 border">{new Date(pack.travelDate).toLocaleDateString()}</td>
-              <td className="p-2 border">{pack.company || '-'}</td>
+              <td className="p-2 border text-right">{pack.id}</td>
+              <td className="p-2 border text-right">{translateType(pack.type)}</td>
+              <td className="p-2 border text-right">
+                {new Date(pack.travelDate).toLocaleDateString('fa-IR')}
+              </td>
+              <td className="p-2 border text-right">{pack.company || '-'}</td>
             </tr>
           ))}
         </tbody>

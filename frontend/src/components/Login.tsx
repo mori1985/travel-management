@@ -12,56 +12,64 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Sending login request:', { username, password });
     try {
       const response = await axios.post('http://localhost:3000/auth/login', {
         username,
         password,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
       });
+      console.log('Login response:', response.data);
       setToken(response.data.access_token);
       navigate('/packs');
     } catch (err: any) {
-      console.error('Login error:', err.response?.data || err.message);
-      setError(`Login failed: ${err.response?.data?.message || err.message}`);
+      console.error('Login error:', err.response?.data || err.message, err);
+      setError(`ورود ناموفق: ${err.response?.data?.message || err.message}`);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 to-blue-200">
+      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all hover:scale-105">
+        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">ورود به سیستم</h2>
+        <img src="logo.png" className="mx-auto mb-4 w-24" />
+        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="username">
-              Username
+          <div className="mb-5">
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="username">
+              نام کاربری
             </label>
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               required
             />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2" htmlFor="password">
-              Password
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="password">
+              رمز عبور
             </label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300"
           >
-            Login
+            ورود
           </button>
         </form>
       </div>
