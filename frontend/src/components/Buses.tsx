@@ -3,47 +3,48 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
-interface Passenger {
+interface Bus {
   id: number;
-  name: string;
-  phone: string;
+  plate: string;
+  driver: string;
+  driverPhone: string;
   packId: number;
 }
 
-const Passengers = () => {
-  const [passengers, setPassengers] = useState<Passenger[]>([]);
+const Buses = () => {
+  const [buses, setBuses] = useState<Bus[]>([]);
   const [error, setError] = useState('');
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchPassengers = async () => {
+    const fetchBuses = async () => {
       try {
-        console.log('Fetching passengers with token:', token);
-        const response = await axios.get('http://localhost:3000/passengers', {
+        console.log('Fetching buses with token:', token);
+        const response = await axios.get('http://localhost:3000/buses', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setPassengers(response.data);
+        setBuses(response.data);
         setError('');
       } catch (err: any) {
-        console.error('Fetch passengers error:', err.response?.data || err.message);
-        setError('خطا در بارگذاری مسافران. لطفاً دوباره تلاش کنید.');
+        console.error('Fetch buses error:', err.response?.data || err.message);
+        setError('خطا در بارگذاری اتوبوس‌ها. لطفاً دوباره تلاش کنید.');
       }
     };
-    if (token) fetchPassengers();
+    if (token) fetchBuses();
   }, [token]);
 
   return (
     <div className="container mx-auto p-4 flex justify-center">
       <div className="w-full max-w-4xl">
-        <h2 className="text-2xl font-bold mb-4 text-right">لیست مسافران</h2>
+        <h2 className="text-2xl font-bold mb-4 text-right">لیست اتوبوس‌ها</h2>
         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
         <div className="mb-4 flex justify-between flex-col sm:flex-row">
           <div></div>
           <Link
-            to="/passengers/create"
+            to="/buses/create"
             className="bg-green-500 text-white p-2 rounded hover:bg-green-600"
           >
-            ایجاد مسافر جدید
+            ایجاد اتوبوس جدید
           </Link>
         </div>
         <div className="overflow-x-auto">
@@ -51,18 +52,20 @@ const Passengers = () => {
             <thead>
               <tr>
                 <th>شناسه</th>
-                <th>نام</th>
-                <th>تلفن</th>
+                <th>پلاک</th>
+                <th>راننده</th>
+                <th>تلفن راننده</th>
                 <th>شناسه پک</th>
               </tr>
             </thead>
             <tbody>
-              {passengers.map((passenger) => (
-                <tr key={passenger.id}>
-                  <td>{passenger.id}</td>
-                  <td>{passenger.name}</td>
-                  <td>{passenger.phone}</td>
-                  <td>{passenger.packId}</td>
+              {buses.map((bus) => (
+                <tr key={bus.id}>
+                  <td>{bus.id}</td>
+                  <td>{bus.plate}</td>
+                  <td>{bus.driver}</td>
+                  <td>{bus.driverPhone}</td>
+                  <td>{bus.packId}</td>
                 </tr>
               ))}
             </tbody>
@@ -73,4 +76,4 @@ const Passengers = () => {
   );
 };
 
-export default Passengers;
+export default Buses;

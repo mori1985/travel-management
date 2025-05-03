@@ -1,27 +1,39 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Packs from './components/Packs';
-import CreatePack from './components/CreatePack';
 import Passengers from './components/Passengers';
-import CreatePassenger from './components/CreatePassenger';
 import Buses from './components/Buses';
+import CreateNormalPassenger from './components/CreateNormalPassenger';
+import CreateVipPassenger from './components/CreateVipPassenger';
+import CreatePack from './components/CreatePack';
 import CreateBus from './components/CreateBus';
 
-function App() {
+const App = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/packs" element={<Packs />} />
-        <Route path="/packs/create" element={<CreatePack />} />
-        <Route path="/passengers" element={<Passengers />} />
-        <Route path="/passengers/create" element={<CreatePassenger />} />
-        <Route path="/buses" element={<Buses />} />
-        <Route path="/buses/create" element={<CreateBus />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<h2 className="text-center mt-10">عدم دسترسی</h2>} />
+          <Route element={<ProtectedRoute allowedRoles={['level1', 'level2', 'admin']} />}>
+            <Route path="/packs" element={<Packs />} />
+            <Route path="/passengers" element={<Passengers />} />
+            <Route path="/buses" element={<Buses />} />
+            <Route path="/packs/create" element={<CreatePack />} />
+            <Route path="/buses/create" element={<CreateBus />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={['level1']} />}>
+            <Route path="/passengers/create/normal" element={<CreateNormalPassenger />} />
+            <Route path="/passengers/create/vip" element={<CreateVipPassenger />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
-}
+};
 
 export default App;

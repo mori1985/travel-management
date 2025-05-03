@@ -7,7 +7,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { setToken } = useContext(AuthContext);
+  const { setToken, setRole } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,6 +25,7 @@ const Login = () => {
       });
       console.log('Login response:', response.data);
       setToken(response.data.access_token);
+      setRole(response.data.role); // فرض می‌کنیم بک‌اند role می‌فرسته
       navigate('/packs');
     } catch (err: any) {
       console.error('Login error:', err.response?.data || err.message, err);
@@ -33,10 +34,9 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 to-blue-200">
-      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all hover:scale-105">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-blue-200 p-4">
+      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all hover:scale-105 animate-fade-in">
         <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">ورود به سیستم</h2>
-        <img src="logo.png" className="mx-auto mb-4 w-24" />
         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
