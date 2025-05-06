@@ -4,6 +4,9 @@ import { CreatePassengerDto } from './dto/create-passenger.dto';
 export declare class PassengersService {
     private prisma;
     constructor(prisma: PrismaService);
+    checkNationalCode(nationalCode: string): Promise<{
+        exists: boolean;
+    }>;
     create(data: CreatePassengerDto, userRole: string, userId: number): Promise<Passenger>;
     findAll(filters: {
         travelType?: string;

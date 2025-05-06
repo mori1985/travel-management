@@ -59,14 +59,14 @@ export declare class PacksController {
     } & {
         id: number;
         createdAt: Date;
-        name: string;
-        lastname: string;
+        firstName: string | null;
+        lastName: string | null;
         gender: string;
         phone: string;
-        nationalId: string;
-        travelDate: Date;
-        returnDate: Date | null;
-        birthDate: Date;
+        nationalCode: string | null;
+        travelDate: string;
+        returnDate: string | null;
+        birthDate: string;
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;

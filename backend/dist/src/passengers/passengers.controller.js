@@ -23,6 +23,9 @@ let PassengersController = class PassengersController {
     constructor(passengersService) {
         this.passengersService = passengersService;
     }
+    async checkNationalCode(nationalCode) {
+        return this.passengersService.checkNationalCode(nationalCode);
+    }
     create(createPassengerDto, req) {
         return this.passengersService.create(createPassengerDto, req.user.role, req.user.userId);
     }
@@ -40,6 +43,13 @@ let PassengersController = class PassengersController {
     }
 };
 exports.PassengersController = PassengersController;
+__decorate([
+    (0, common_1.Get)('check-national-code/:nationalCode'),
+    __param(0, (0, common_1.Param)('nationalCode')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PassengersController.prototype, "checkNationalCode", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

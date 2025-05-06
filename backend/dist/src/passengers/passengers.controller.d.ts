@@ -4,17 +4,20 @@ import { Prisma } from '@prisma/client';
 export declare class PassengersController {
     private readonly passengersService;
     constructor(passengersService: PassengersService);
+    checkNationalCode(nationalCode: string): Promise<{
+        exists: boolean;
+    }>;
     create(createPassengerDto: CreatePassengerDto, req: any): Promise<{
         id: number;
         createdAt: Date;
-        name: string;
-        lastname: string;
+        firstName: string | null;
+        lastName: string | null;
         gender: string;
         phone: string;
-        nationalId: string;
-        travelDate: Date;
-        returnDate: Date | null;
-        birthDate: Date;
+        nationalCode: string | null;
+        travelDate: string;
+        returnDate: string | null;
+        birthDate: string;
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
@@ -24,14 +27,14 @@ export declare class PassengersController {
     findAll(travelType?: string, startDate?: string, endDate?: string): Promise<{
         id: number;
         createdAt: Date;
-        name: string;
-        lastname: string;
+        firstName: string | null;
+        lastName: string | null;
         gender: string;
         phone: string;
-        nationalId: string;
-        travelDate: Date;
-        returnDate: Date | null;
-        birthDate: Date;
+        nationalCode: string | null;
+        travelDate: string;
+        returnDate: string | null;
+        birthDate: string;
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
@@ -41,14 +44,14 @@ export declare class PassengersController {
     findOne(id: string): Promise<{
         id: number;
         createdAt: Date;
-        name: string;
-        lastname: string;
+        firstName: string | null;
+        lastName: string | null;
         gender: string;
         phone: string;
-        nationalId: string;
-        travelDate: Date;
-        returnDate: Date | null;
-        birthDate: Date;
+        nationalCode: string | null;
+        travelDate: string;
+        returnDate: string | null;
+        birthDate: string;
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
@@ -58,14 +61,14 @@ export declare class PassengersController {
     update(id: string, data: Prisma.PassengerUpdateInput, req: any): Promise<{
         id: number;
         createdAt: Date;
-        name: string;
-        lastname: string;
+        firstName: string | null;
+        lastName: string | null;
         gender: string;
         phone: string;
-        nationalId: string;
-        travelDate: Date;
-        returnDate: Date | null;
-        birthDate: Date;
+        nationalCode: string | null;
+        travelDate: string;
+        returnDate: string | null;
+        birthDate: string;
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
@@ -75,14 +78,14 @@ export declare class PassengersController {
     remove(id: string, req: any): Promise<{
         id: number;
         createdAt: Date;
-        name: string;
-        lastname: string;
+        firstName: string | null;
+        lastName: string | null;
         gender: string;
         phone: string;
-        nationalId: string;
-        travelDate: Date;
-        returnDate: Date | null;
-        birthDate: Date;
+        nationalCode: string | null;
+        travelDate: string;
+        returnDate: string | null;
+        birthDate: string;
         travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;

@@ -12,11 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreatePassengerDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreatePassengerDto {
-    name;
-    lastname;
+    firstName;
+    lastName;
     gender;
     phone;
-    nationalId;
+    nationalCode;
     travelDate;
     returnDate;
     birthDate;
@@ -29,11 +29,11 @@ exports.CreatePassengerDto = CreatePassengerDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreatePassengerDto.prototype, "name", void 0);
+], CreatePassengerDto.prototype, "firstName", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreatePassengerDto.prototype, "lastname", void 0);
+], CreatePassengerDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -45,7 +45,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreatePassengerDto.prototype, "nationalId", void 0);
+], CreatePassengerDto.prototype, "nationalCode", void 0);
 __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
@@ -61,7 +61,6 @@ __decorate([
 ], CreatePassengerDto.prototype, "birthDate", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['normal', 'vip']),
     __metadata("design:type", String)
 ], CreatePassengerDto.prototype, "travelType", void 0);
 __decorate([
@@ -75,7 +74,6 @@ __decorate([
     __metadata("design:type", String)
 ], CreatePassengerDto.prototype, "leaderPhone", void 0);
 __decorate([
-    (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], CreatePassengerDto.prototype, "packId", void 0);

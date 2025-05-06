@@ -9,6 +9,11 @@ import { Prisma } from '@prisma/client';
 export class PassengersController {
   constructor(private readonly passengersService: PassengersService) {}
 
+  @Get('check-national-code/:nationalCode')
+  async checkNationalCode(@Param('nationalCode') nationalCode: string) {
+    return this.passengersService.checkNationalCode(nationalCode);
+  }
+
   @Post()
   create(@Body() createPassengerDto: CreatePassengerDto, @Request() req) {
     return this.passengersService.create(createPassengerDto, req.user.role, req.user.userId);

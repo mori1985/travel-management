@@ -1,9 +1,9 @@
 export declare class CreatePassengerDto {
-    name: string;
-    lastname: string;
+    firstName: string;
+    lastName: string;
     gender: string;
     phone: string;
-    nationalId: string;
+    nationalCode: string;
     travelDate: string;
     returnDate?: string;
     birthDate: string;

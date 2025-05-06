@@ -10,6 +10,23 @@ const Login = () => {
   const { setToken, setRole } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const decodeToken = (token: string) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error('Error decoding token:', e);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Sending login request:', { username, password });
@@ -23,12 +40,15 @@ const Login = () => {
         },
         withCredentials: true,
       });
-      console.log('Login response:', response.data);
-      setToken(response.data.access_token);
-      setRole(response.data.role); // فرض می‌کنیم بک‌اند role می‌فرسته
+      console.log('Login response:', JSON.stringify(response.data, null, 2));
+      const token = response.data.access_token;
+      setToken(token);
+      const decoded = decodeToken(token);
+      console.log('Decoded token:', decoded);
+      setRole(decoded?.role || 'unknown');
       navigate('/packs');
     } catch (err: any) {
-      console.error('Login error:', err.response?.data || err.message, err);
+      console.error('Login error:', err.response?.data || err.message);
       setError(`ورود ناموفق: ${err.response?.data?.message || err.message}`);
     }
   };

@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap");
+@import '@fontsource/vazir';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 html {
   direction: rtl;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: "Vazirmatn", sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: "Vazirmatn", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -23,8 +23,14 @@ body {
 
 /* Fade-in animation for forms */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in;
@@ -46,7 +52,7 @@ body {
 }
 .react-datepicker {
   direction: rtl;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: "Vazirmatn", sans-serif;
 }
 .react-datepicker__input-container input {
   width: 100%;
@@ -63,3 +69,28 @@ body {
   width: 2rem;
   line-height: 2rem;
 }
+
+/* استایل برای تقویم شمسی */
+.jalali-calendar {
+  direction: rtl;
+  font-family: "Vazir", sans-serif; /* فونت فارسی */
+}
+
+.jalali-calendar .react-datepicker__header {
+  background-color: #2563eb;
+  color: white;
+}
+
+.jalali-calendar .react-datepicker__day-name,
+.jalali-calendar .react-datepicker__day {
+  width: 2.5rem;
+  line-height: 2.5rem;
+  margin: 0.2rem;
+}
+
+.jalali-calendar .react-datepicker__day--selected {
+  background-color: #2563eb;
+  color: white;
+}
+
+

@@ -18,6 +18,12 @@ let PassengersService = class PassengersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    async checkNationalCode(nationalCode) {
+        const passenger = await this.prisma.passenger.findUnique({
+            where: { nationalCode },
+        });
+        return { exists: !!passenger };
+    }
     async create(data, userRole, userId) {
         if (userRole !== 'level1' && userRole !== 'admin') {
             throw new common_1.ForbiddenException('Only level1 or admin can create passengers');
@@ -25,14 +31,14 @@ let PassengersService = class PassengersService {
         try {
             return await this.prisma.passenger.create({
                 data: {
-                    name: data.name,
-                    lastname: data.lastname,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
                     gender: data.gender,
                     phone: data.phone,
-                    nationalId: data.nationalId,
-                    travelDate: new Date(data.travelDate),
-                    returnDate: data.returnDate ? new Date(data.returnDate) : null,
-                    birthDate: new Date(data.birthDate),
+                    nationalCode: data.nationalCode,
+                    travelDate: data.travelDate,
+                    returnDate: data.returnDate || null,
+                    birthDate: data.birthDate,
                     travelType: data.travelType,
                     leaderName: data.leaderName,
                     leaderPhone: data.leaderPhone,
@@ -43,7 +49,7 @@ let PassengersService = class PassengersService {
         }
         catch (error) {
             if (error instanceof client_1.Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                throw new common_1.ConflictException(`Passenger with nationalId ${data.nationalId} already exists`);
+                throw new common_1.ConflictException(`Passenger with nationalCode ${data.nationalCode} already exists`);
             }
             throw error;
         }
@@ -55,8 +61,8 @@ let PassengersService = class PassengersService {
         }
         if (filters.startDate && filters.endDate) {
             where.travelDate = {
-                gte: new Date(filters.startDate),
-                lte: new Date(filters.endDate),
+                gte: filters.startDate,
+                lte: filters.endDate,
             };
         }
         return this.prisma.passenger.findMany({

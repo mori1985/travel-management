@@ -17,23 +17,23 @@ model User {
 }
 
 model Passenger {
-  id          Int      @id @default(autoincrement())
-  name        String
-  lastname    String
-  gender      String
-  phone       String
-  nationalId  String   @unique
-  travelDate  DateTime
-  returnDate  DateTime?
-  birthDate   DateTime
-  travelType  String   // 'normal', 'vip'
-  leaderName  String?
-  leaderPhone String?
-  createdById Int
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  packId      Int?
-  pack        Pack?    @relation(fields: [packId], references: [id])
-  createdAt   DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  firstName     String?
+  lastName      String?
+  gender        String
+  phone         String
+  nationalCode  String?   @unique
+  travelDate    String
+  returnDate    String?
+  birthDate     String
+  travelType    String   // 'normal', 'vip'
+  leaderName    String?
+  leaderPhone   String?
+  createdById   Int
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  packId        Int?
+  pack          Pack?    @relation(fields: [packId], references: [id])
+  createdAt     DateTime @default(now())
 
   @@index([travelDate])
 }

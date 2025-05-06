@@ -7,6 +7,8 @@ const Navbar = () => {
   const { token, role, setToken, setRole } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  console.log('Navbar: Current role:', role);
+
   const handleLogout = () => {
     setToken(null);
     setRole(null);
@@ -68,7 +70,7 @@ const Navbar = () => {
                 >
                   اتوبوس‌ها
                 </Link>
-                {role === 'level1' && (
+                {(role === 'level1' || role === 'admin') && (
                   <>
                     <Link
                       to="/passengers/create/normal"

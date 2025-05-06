@@ -1,83 +1,155 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
+import axios from '../axiosConfig'; // تغییر به axiosInstance
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
-import DatePicker from 'react-datepicker';
-import moment from 'jalali-moment';
-import 'react-datepicker/dist/react-datepicker.css';
+import DatePicker from 'react-multi-date-picker';
+import persian from 'react-date-object/calendars/persian';
+import persian_fa from 'react-date-object/locales/persian_fa';
+import 'react-multi-date-picker/styles/layouts/mobile.css';
+import { FaUserPlus } from 'react-icons/fa';
 
 const CreateNormalPassenger = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    gender: '',
-    mobile: '',
     nationalCode: '',
-    departureDate: null as Date | null,
-    returnDate: null as Date | null,
-    birthDate: null as Date | null,
-    tripType: 'normal',
-    guardianName: '',
+    mobile: '',
+    departureDate: null as any,
+    returnDate: null as any,
+    birthDate: null as any,
+    guardianFirstName: '',
+    guardianLastName: '',
     guardianMobile: '',
+    travelType: 'individual' as 'individual' | 'group',
   });
-  const [error, setError] = useState('');
-  const { token } = useContext(AuthContext);
+  const [errors, setErrors] = useState({
+    firstName: '',
+    lastName: '',
+    nationalCode: '',
+    mobile: '',
+    departureDate: '',
+    birthDate: '',
+  });
+  const [nationalCodeError, setNationalCodeError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const validateField = (name: string, value: string | any) => {
+    switch (name) {
+      case 'firstName':
+        if (value.length < 3) {
+          return 'نام باید حداقل ۳ حرف باشد';
+        }
+        return '';
+      case 'lastName':
+        if (value.length < 3) {
+          return 'نام خانوادگی باید حداقل ۳ حرف باشد';
+        }
+        return '';
+      case 'nationalCode':
+        if (!/^\d{10}$/.test(value)) {
+          return 'کد ملی باید دقیقاً ۱۰ رقم باشد';
+        }
+        return '';
+      case 'mobile':
+        if (!/^09\d{9}$/.test(value)) {
+          return 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد';
+        }
+        return '';
+      case 'departureDate':
+        if (!value) {
+          return 'تاریخ رفت الزامی است';
+        }
+        return '';
+      case 'birthDate':
+        if (!value) {
+          return 'تاریخ تولد الزامی است';
+        }
+        return '';
+      default:
+        return '';
+    }
   };
 
-  const handleDateChange = (date: Date | null, field: string) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setErrors({ ...errors, [name]: validateField(name, value) });
+  };
+
+  const handleDateChange = (date: any, field: string) => {
     setFormData({ ...formData, [field]: date });
+    setErrors({ ...errors, [field]: validateField(field, date) });
+  };
+
+  const validateNationalCode = async (nationalCode: string) => {
+    if (!/^\d{10}$/.test(nationalCode)) {
+      setNationalCodeError('کد ملی باید دقیقاً ۱۰ رقم باشد');
+      return false;
+    }
+    try {
+      const response = await axios.get(`/passengers/check-national-code/${nationalCode}`);
+      if (response.data.exists) {
+        setNationalCodeError('این کد ملی قبلاً ثبت شده است');
+        return false;
+      }
+      setNationalCodeError('');
+      return true;
+    } catch (err: any) {
+      setNationalCodeError('خطا در بررسی کد ملی');
+      return false;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+
+    const newErrors = {
+      firstName: validateField('firstName', formData.firstName),
+      lastName: validateField('lastName', formData.lastName),
+      nationalCode: validateField('nationalCode', formData.nationalCode),
+      mobile: validateField('mobile', formData.mobile),
+      departureDate: validateField('departureDate', formData.departureDate),
+      birthDate: validateField('birthDate', formData.birthDate),
+    };
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some((error) => error !== '')) {
+      return;
+    }
+
+    if (!(await validateNationalCode(formData.nationalCode))) return;
+
+    setIsLoading(true);
     try {
-      // چک یونیک بودن کد ملی (فعلاً فرضی)
-      const nationalCodeCheck = await axios.get(
-        `http://localhost:3000/passengers/check-national-code/${formData.nationalCode}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!nationalCodeCheck.data.isUnique) {
-        setError('کد ملی قبلاً ثبت شده است.');
-        return;
-      }
-
-      // آماده‌سازی دیتا برای ارسال
-      const payload = {
-        ...formData,
-        departureDate: formData.departureDate
-          ? moment(formData.departureDate).locale('fa').format('YYYY-MM-DD')
-          : null,
-        returnDate: formData.returnDate
-          ? moment(formData.returnDate).locale('fa').format('YYYY-MM-DD')
-          : null,
-        birthDate: formData.birthDate
-          ? moment(formData.birthDate).locale('fa').format('YYYY-MM-DD')
-          : null,
-      };
-
-      // ارسال به بک‌اند
-      await axios.post('http://localhost:3000/passengers', payload, {
-        headers: { Authorization: `Bearer ${token}` },
+      await axios.post('/passengers', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        nationalCode: formData.nationalCode,
+        phone: formData.mobile,
+        travelDate: formData.departureDate ? formData.departureDate.format('YYYY/MM/DD') : null,
+        returnDate: formData.returnDate ? formData.returnDate.format('YYYY/MM/DD') : null,
+        birthDate: formData.birthDate ? formData.birthDate.format('YYYY/MM/DD') : null,
+        travelType: formData.travelType === 'individual' ? 'normal' : 'vip',
+        leaderName: formData.guardianFirstName,
+        leaderPhone: formData.guardianMobile,
+        gender: 'unknown', // مقدار پیش‌فرض، چون تو فرم نیست
       });
       navigate('/passengers');
     } catch (err: any) {
-      console.error('Create passenger error:', err.response?.data || err.message);
-      setError('خطا در ثبت مسافر. لطفاً دوباره تلاش کنید.');
+      setErrors({ ...errors, general: `خطا در ثبت: ${err.response?.data?.message || err.message}` });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-blue-200 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md animate-fade-in">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">ثبت مسافر عادی</h2>
-        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all hover:scale-105 animate-fade-in">
+        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">ثبت مسافر عادی</h2>
+        {errors.general && <p className="text-red-500 mb-4 text-center">{errors.general}</p>}
+        {nationalCodeError && <p className="text-red-500 mb-4 text-center">{nationalCodeError}</p>}
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+          <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="firstName">
               نام
             </label>
@@ -87,11 +159,12 @@ const CreateNormalPassenger = () => {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               required
             />
+            {errors.firstName && <p className="text-red-500 text-sm mt-1 text-right">{errors.firstName}</p>}
           </div>
-          <div className="mb-4">
+          <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="lastName">
               نام خانوادگی
             </label>
@@ -101,42 +174,12 @@ const CreateNormalPassenger = () => {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               required
             />
+            {errors.lastName && <p className="text-red-500 text-sm mt-1 text-right">{errors.lastName}</p>}
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="gender">
-              جنسیت
-            </label>
-            <select
-              id="gender"
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg text-right"
-              required
-            >
-              <option value="">انتخاب کنید</option>
-              <option value="male">مرد</option>
-              <option value="female">زن</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="mobile">
-              شماره موبایل
-            </label>
-            <input
-              type="tel"
-              id="mobile"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg text-right"
-              required
-            />
-          </div>
-          <div className="mb-4">
+          <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="nationalCode">
               کد ملی
             </label>
@@ -146,82 +189,141 @@ const CreateNormalPassenger = () => {
               name="nationalCode"
               value={formData.nationalCode}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               required
             />
+            {errors.nationalCode && <p className="text-red-500 text-sm mt-1 text-right">{errors.nationalCode}</p>}
           </div>
-          <div className="mb-4">
+          <div className="mb-5">
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="mobile">
+              شماره موبایل
+            </label>
+            <input
+              type="text"
+              id="mobile"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              required
+            />
+            {errors.mobile && <p className="text-red-500 text-sm mt-1 text-right">{errors.mobile}</p>}
+          </div>
+          <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="departureDate">
               تاریخ رفت
             </label>
             <DatePicker
-              selected={formData.departureDate}
-              onChange={(date: Date | null) => handleDateChange(date, 'departureDate')}
-              dateFormat="yyyy/MM/dd"
-              calendar="jalali"
-              locale="fa"
-              className="w-full p-2 border rounded-lg text-right"
+              value={formData.departureDate}
+              onChange={(date: any) => handleDateChange(date, 'departureDate')}
+              calendar={persian}
+              locale={persian_fa}
+              format="YYYY/MM/DD"
+              inputClass="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              placeholder="انتخاب تاریخ (مثال: 1404/02/13)"
               required
             />
+            {errors.departureDate && <p className="text-red-500 text-sm mt-1 text-right">{errors.departureDate}</p>}
           </div>
-          <div className="mb-4">
+          <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="returnDate">
               تاریخ برگشت
             </label>
             <DatePicker
-              selected={formData.returnDate}
-              onChange={(date: Date | null) => handleDateChange(date, 'returnDate')}
-              dateFormat="yyyy/MM/dd"
-              calendar="jalali"
-              locale="fa"
-              className="w-full p-2 border rounded-lg text-right"
+              value={formData.returnDate}
+              onChange={(date: any) => handleDateChange(date, 'returnDate')}
+              calendar={persian}
+              locale={persian_fa}
+              format="YYYY/MM/DD"
+              inputClass="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              placeholder="انتخاب تاریخ (مثال: 1404/02/13)"
             />
           </div>
-          <div className="mb-4">
+          <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="birthDate">
               تاریخ تولد
             </label>
             <DatePicker
-              selected={formData.birthDate}
-              onChange={(date: Date | null) => handleDateChange(date, 'birthDate')}
-              dateFormat="yyyy/MM/dd"
-              calendar="jalali"
-              locale="fa"
-              className="w-full p-2 border rounded-lg text-right"
+              value={formData.birthDate}
+              onChange={(date: any) => handleDateChange(date, 'birthDate')}
+              calendar={persian}
+              locale={persian_fa}
+              format="YYYY/MM/DD"
+              inputClass="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              placeholder="انتخاب تاریخ (مثال: 1404/02/13)"
               required
             />
+            {errors.birthDate && <p className="text-red-500 text-sm mt-1 text-right">{errors.birthDate}</p>}
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianName">
-              نام و نام خانوادگی سرپرست (اختیاری)
+          <div className="mb-5">
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianFirstName">
+              نام سرپرست
             </label>
             <input
               type="text"
-              id="guardianName"
-              name="guardianName"
-              value={formData.guardianName}
+              id="guardianFirstName"
+              name="guardianFirstName"
+              value={formData.guardianFirstName}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianMobile">
-              موبایل سرپرست (اختیاری)
+          <div className="mb-5">
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianLastName">
+              نام خانوادگی سرپرست
             </label>
             <input
-              type="tel"
+              type="text"
+              id="guardianLastName"
+              name="guardianLastName"
+              value={formData.guardianLastName}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+            />
+          </div>
+          <div className="mb-5">
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianMobile">
+              موبایل سرپرست
+            </label>
+            <input
+              type="text"
               id="guardianMobile"
               name="guardianMobile"
               value={formData.guardianMobile}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
             />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="travelType">
+              نوع سفر
+            </label>
+            <select
+              id="travelType"
+              name="travelType"
+              value={formData.travelType}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              required
+            >
+              <option value="individual">انفرادی</option>
+              <option value="group">گروهی</option>
+            </select>
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+            disabled={isLoading}
           >
-            ثبت مسافر
+            {isLoading ? (
+              <svg className="animate-spin h-5 w-5 ml-2" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <FaUserPlus className="ml-2" />
+            )}
+            {isLoading ? 'در حال ثبت...' : 'ثبت'}
           </button>
         </form>
       </div>

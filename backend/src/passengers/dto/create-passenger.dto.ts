@@ -1,11 +1,11 @@
-import { IsString, IsDateString, IsOptional, IsInt, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsDateString } from 'class-validator';
 
 export class CreatePassengerDto {
   @IsString()
-  name: string;
+  firstName: string;
 
   @IsString()
-  lastname: string;
+  lastName: string;
 
   @IsString()
   gender: string;
@@ -14,7 +14,7 @@ export class CreatePassengerDto {
   phone: string;
 
   @IsString()
-  nationalId: string;
+  nationalCode: string;
 
   @IsDateString()
   travelDate: string;
@@ -27,7 +27,6 @@ export class CreatePassengerDto {
   birthDate: string;
 
   @IsString()
-  @IsIn(['normal', 'vip'])
   travelType: string;
 
   @IsString()
@@ -38,7 +37,6 @@ export class CreatePassengerDto {
   @IsOptional()
   leaderPhone?: string;
 
-  @IsInt()
   @IsOptional()
   packId?: number;
 }

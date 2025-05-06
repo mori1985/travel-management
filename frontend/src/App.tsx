@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -17,6 +17,7 @@ const App = () => {
       <BrowserRouter>
         <Navbar />
         <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<h2 className="text-center mt-10">عدم دسترسی</h2>} />
           <Route element={<ProtectedRoute allowedRoles={['level1', 'level2', 'admin']} />}>
@@ -26,7 +27,7 @@ const App = () => {
             <Route path="/packs/create" element={<CreatePack />} />
             <Route path="/buses/create" element={<CreateBus />} />
           </Route>
-          <Route element={<ProtectedRoute allowedRoles={['level1']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['level1', 'admin']} />}>
             <Route path="/passengers/create/normal" element={<CreateNormalPassenger />} />
             <Route path="/passengers/create/vip" element={<CreateVipPassenger />} />
           </Route>
