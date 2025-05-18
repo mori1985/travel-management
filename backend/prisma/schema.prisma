@@ -39,19 +39,28 @@ model Passenger {
 }
 
 model Pack {
-  id           Int        @id @default(autoincrement())
-  travelDate   DateTime
-  type         String     // 'normal', 'vip'
-  repository   Int        // 1, 2, 3
-  passengers   Passenger[]
-  company      String?
-  plate        String?
-  driver       String?
-  driverPhone  String?
-  createdAt    DateTime   @default(now())
-  smsHistory   SmsHistory[]
+  id            Int           @id @default(autoincrement())
+  travelDate    DateTime
+  type          PackType      @default(normal)
+  repository    Int           @default(1)        // 1, 2, 3
+  status        PackStatus    // موقتاً @default(pending) رو حذف کردیم
+  passengers    Passenger[]
+  busAssignment BusAssignment? @relation(fields: [busAssignmentId], references: [id], onDelete: Cascade)
+  busAssignmentId Int?         @unique
+  createdAt     DateTime      @default(now())
+  smsHistory    SmsHistory[]
 
   @@index([travelDate])
+}
+
+model BusAssignment {
+  id           Int      @id @default(autoincrement())
+  company      String
+  plate        String
+  driver       String
+  driverPhone  String
+  packId       Int      @unique
+  pack         Pack?    @relation
 }
 
 model SmsHistory {
@@ -62,4 +71,15 @@ model SmsHistory {
   sentAt    DateTime
   count     Int
   createdAt DateTime @default(now())
+}
+
+enum PackType {
+  normal
+  vip
+}
+
+enum PackStatus {
+  pending
+  assigned
+  confirmed
 }

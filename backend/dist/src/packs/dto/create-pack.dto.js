@@ -15,10 +15,6 @@ class CreatePackDto {
     travelDate;
     type;
     repository;
-    company;
-    plate;
-    driver;
-    driverPhone;
 }
 exports.CreatePackDto = CreatePackDto;
 __decorate([
@@ -35,24 +31,4 @@ __decorate([
     (0, class_validator_1.IsIn)([1, 2, 3]),
     __metadata("design:type", Number)
 ], CreatePackDto.prototype, "repository", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], CreatePackDto.prototype, "company", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], CreatePackDto.prototype, "plate", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], CreatePackDto.prototype, "driver", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], CreatePackDto.prototype, "driverPhone", void 0);
 //# sourceMappingURL=create-pack.dto.js.map

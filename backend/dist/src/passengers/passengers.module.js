@@ -11,13 +11,14 @@ const common_1 = require("@nestjs/common");
 const passengers_service_1 = require("./passengers.service");
 const passengers_controller_1 = require("./passengers.controller");
 const prisma_service_1 = require("../prisma.service");
+const packs_service_1 = require("../packs/packs.service");
 let PassengersModule = class PassengersModule {
 };
 exports.PassengersModule = PassengersModule;
 exports.PassengersModule = PassengersModule = __decorate([
     (0, common_1.Module)({
         controllers: [passengers_controller_1.PassengersController],
-        providers: [passengers_service_1.PassengersService, prisma_service_1.PrismaService],
+        providers: [passengers_service_1.PassengersService, prisma_service_1.PrismaService, packs_service_1.PacksService],
     })
 ], PassengersModule);
 //# sourceMappingURL=passengers.module.js.map

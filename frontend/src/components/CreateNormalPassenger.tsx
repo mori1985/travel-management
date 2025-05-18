@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import axios from '../axiosConfig'; // تغییر به axiosInstance
+import axios from '../axiosConfig';
 import { useNavigate } from 'react-router-dom';
-import DatePicker from 'react-multi-date-picker';
-import persian from 'react-date-object/calendars/persian';
-import persian_fa from 'react-date-object/locales/persian_fa';
-import 'react-multi-date-picker/styles/layouts/mobile.css';
 import { FaUserPlus } from 'react-icons/fa';
+import DateSelector from './DateSelector';
 
 const CreateNormalPassenger = () => {
   const [formData, setFormData] = useState({
@@ -13,13 +10,14 @@ const CreateNormalPassenger = () => {
     lastName: '',
     nationalCode: '',
     mobile: '',
-    departureDate: null as any,
-    returnDate: null as any,
-    birthDate: null as any,
+    departureDate: '1404-04-01',
+    returnDate: '',
+    birthDate: '1404-01-01',
     guardianFirstName: '',
     guardianLastName: '',
     guardianMobile: '',
-    travelType: 'individual' as 'individual' | 'group',
+    travelType: 'normal' as 'normal' | 'vip',
+    gender: '' as 'مرد' | 'زن' | '',
   });
   const [errors, setErrors] = useState({
     firstName: '',
@@ -28,12 +26,17 @@ const CreateNormalPassenger = () => {
     mobile: '',
     departureDate: '',
     birthDate: '',
+    gender: '',
+    guardianFirstName: '',
+    guardianLastName: '',
+    guardianMobile: '',
+    general: '',
   });
   const [nationalCodeError, setNationalCodeError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const validateField = (name: string, value: string | any) => {
+  const validateField = (name: string, value: string) => {
     switch (name) {
       case 'firstName':
         if (value.length < 3) {
@@ -65,20 +68,40 @@ const CreateNormalPassenger = () => {
           return 'تاریخ تولد الزامی است';
         }
         return '';
+      case 'gender':
+        if (!value) {
+          return 'جنسیت الزامی است';
+        }
+        return '';
+      case 'guardianFirstName':
+        if (value && value.length < 3) {
+          return 'نام سرپرست باید حداقل ۳ حرف باشد';
+        }
+        return '';
+      case 'guardianLastName':
+        if (value && value.length < 3) {
+          return 'نام خانوادگی سرپرست باید حداقل ۳ حرف باشد';
+        }
+        return '';
+      case 'guardianMobile':
+        if (value && !/^09\d{9}$/.test(value)) {
+          return 'شماره موبایل سرپرست باید با ۰۹ شروع شود و ۱۱ رقم باشد';
+        }
+        return '';
       default:
         return '';
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setErrors({ ...errors, [name]: validateField(name, value) });
   };
 
-  const handleDateChange = (date: any, field: string) => {
-    setFormData({ ...formData, [field]: date });
-    setErrors({ ...errors, [field]: validateField(field, date) });
+  const handleDateChange = (date: string, field: string) => {
+    setFormData((prev) => ({ ...prev, [field]: date }));
+    setErrors((prev) => ({ ...prev, [field]: validateField(field, date) }));
   };
 
   const validateNationalCode = async (nationalCode: string) => {
@@ -100,52 +123,63 @@ const CreateNormalPassenger = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const newErrors = {
-      firstName: validateField('firstName', formData.firstName),
-      lastName: validateField('lastName', formData.lastName),
-      nationalCode: validateField('nationalCode', formData.nationalCode),
-      mobile: validateField('mobile', formData.mobile),
-      departureDate: validateField('departureDate', formData.departureDate),
-      birthDate: validateField('birthDate', formData.birthDate),
-    };
-    setErrors(newErrors);
-
-    if (Object.values(newErrors).some((error) => error !== '')) {
-      return;
-    }
-
-    if (!(await validateNationalCode(formData.nationalCode))) return;
-
-    setIsLoading(true);
-    try {
-      await axios.post('/passengers', {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        nationalCode: formData.nationalCode,
-        phone: formData.mobile,
-        travelDate: formData.departureDate ? formData.departureDate.format('YYYY/MM/DD') : null,
-        returnDate: formData.returnDate ? formData.returnDate.format('YYYY/MM/DD') : null,
-        birthDate: formData.birthDate ? formData.birthDate.format('YYYY/MM/DD') : null,
-        travelType: formData.travelType === 'individual' ? 'normal' : 'vip',
-        leaderName: formData.guardianFirstName,
-        leaderPhone: formData.guardianMobile,
-        gender: 'unknown', // مقدار پیش‌فرض، چون تو فرم نیست
-      });
-      navigate('/passengers');
-    } catch (err: any) {
-      setErrors({ ...errors, general: `خطا در ثبت: ${err.response?.data?.message || err.message}` });
-    } finally {
-      setIsLoading(false);
-    }
+  const newErrors = {
+    firstName: validateField('firstName', formData.firstName),
+    lastName: validateField('lastName', formData.lastName),
+    nationalCode: validateField('nationalCode', formData.nationalCode),
+    mobile: validateField('mobile', formData.mobile),
+    departureDate: validateField('departureDate', formData.departureDate),
+    birthDate: validateField('birthDate', formData.birthDate),
+    gender: validateField('gender', formData.gender),
+    guardianFirstName: validateField('guardianFirstName', formData.guardianFirstName),
+    guardianLastName: validateField('guardianLastName', formData.guardianLastName),
+    guardianMobile: validateField('guardianMobile', formData.guardianMobile),
+    general: '',
   };
+  setErrors(newErrors);
+
+  if (Object.values(newErrors).some((error) => error !== '')) {
+    return;
+  }
+
+  if (!(await validateNationalCode(formData.nationalCode))) return;
+
+  setIsLoading(true);
+  try {
+    console.log('Sending to server:', {
+      travelDate: formData.departureDate,
+      returnDate: formData.returnDate,
+      birthDate: formData.birthDate,
+    }); // لاگ قبل از ارسال
+    const response = await axios.post('/passengers', {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      nationalCode: formData.nationalCode,
+      phone: formData.mobile,
+      travelDate: formData.departureDate,
+      returnDate: formData.returnDate || null,
+      birthDate: formData.birthDate,
+      travelType: formData.travelType,
+      leaderName: formData.guardianFirstName,
+      leaderPhone: formData.guardianMobile,
+      gender: formData.gender,
+    });
+    console.log('Response from server:', response.data); // لاگ پاسخ سرور
+    navigate('/packs');
+  } catch (err: any) {
+    setErrors({ ...errors, general: `خطا در ثبت: ${err.response?.data?.message || err.message}` });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-blue-200 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-100 to-purple-200 p-4">
       <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all hover:scale-105 animate-fade-in">
-        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">ثبت مسافر عادی</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center text-purple-700">ثبت مسافر عادی</h2>
         {errors.general && <p className="text-red-500 mb-4 text-center">{errors.general}</p>}
         {nationalCodeError && <p className="text-red-500 mb-4 text-center">{nationalCodeError}</p>}
         <form onSubmit={handleSubmit}>
@@ -159,7 +193,7 @@ const CreateNormalPassenger = () => {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
               required
             />
             {errors.firstName && <p className="text-red-500 text-sm mt-1 text-right">{errors.firstName}</p>}
@@ -174,7 +208,7 @@ const CreateNormalPassenger = () => {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
               required
             />
             {errors.lastName && <p className="text-red-500 text-sm mt-1 text-right">{errors.lastName}</p>}
@@ -189,7 +223,7 @@ const CreateNormalPassenger = () => {
               name="nationalCode"
               value={formData.nationalCode}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
               required
             />
             {errors.nationalCode && <p className="text-red-500 text-sm mt-1 text-right">{errors.nationalCode}</p>}
@@ -204,7 +238,7 @@ const CreateNormalPassenger = () => {
               name="mobile"
               value={formData.mobile}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
               required
             />
             {errors.mobile && <p className="text-red-500 text-sm mt-1 text-right">{errors.mobile}</p>}
@@ -213,15 +247,10 @@ const CreateNormalPassenger = () => {
             <label className="block text-gray-700 mb-2 text-right" htmlFor="departureDate">
               تاریخ رفت
             </label>
-            <DatePicker
-              value={formData.departureDate}
-              onChange={(date: any) => handleDateChange(date, 'departureDate')}
-              calendar={persian}
-              locale={persian_fa}
-              format="YYYY/MM/DD"
-              inputClass="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
-              placeholder="انتخاب تاریخ (مثال: 1404/02/13)"
-              required
+            <DateSelector
+              onDateChange={(date) => handleDateChange(date, 'departureDate')}
+              initialDate={formData.departureDate}
+              dateType="departure"
             />
             {errors.departureDate && <p className="text-red-500 text-sm mt-1 text-right">{errors.departureDate}</p>}
           </div>
@@ -229,31 +258,40 @@ const CreateNormalPassenger = () => {
             <label className="block text-gray-700 mb-2 text-right" htmlFor="returnDate">
               تاریخ برگشت
             </label>
-            <DatePicker
-              value={formData.returnDate}
-              onChange={(date: any) => handleDateChange(date, 'returnDate')}
-              calendar={persian}
-              locale={persian_fa}
-              format="YYYY/MM/DD"
-              inputClass="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
-              placeholder="انتخاب تاریخ (مثال: 1404/02/13)"
+            <DateSelector
+              onDateChange={(date) => handleDateChange(date, 'returnDate')}
+              initialDate={formData.returnDate || '1404-04-01'}
+              dateType="return"
             />
           </div>
           <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="birthDate">
               تاریخ تولد
             </label>
-            <DatePicker
-              value={formData.birthDate}
-              onChange={(date: any) => handleDateChange(date, 'birthDate')}
-              calendar={persian}
-              locale={persian_fa}
-              format="YYYY/MM/DD"
-              inputClass="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
-              placeholder="انتخاب تاریخ (مثال: 1404/02/13)"
-              required
+            <DateSelector
+              onDateChange={(date) => handleDateChange(date, 'birthDate')}
+              initialDate={formData.birthDate}
+              dateType="birth"
             />
             {errors.birthDate && <p className="text-red-500 text-sm mt-1 text-right">{errors.birthDate}</p>}
+          </div>
+          <div className="mb-5">
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="gender">
+              جنسیت
+            </label>
+            <select
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
+              required
+            >
+              <option value="">جنسیت را انتخاب کنید</option>
+              <option value="مرد">مرد</option>
+              <option value="زن">زن</option>
+            </select>
+            {errors.gender && <p className="text-red-500 text-sm mt-1 text-right">{errors.gender}</p>}
           </div>
           <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianFirstName">
@@ -265,8 +303,9 @@ const CreateNormalPassenger = () => {
               name="guardianFirstName"
               value={formData.guardianFirstName}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
             />
+            {errors.guardianFirstName && <p className="text-red-500 text-sm mt-1 text-right">{errors.guardianFirstName}</p>}
           </div>
           <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianLastName">
@@ -278,8 +317,9 @@ const CreateNormalPassenger = () => {
               name="guardianLastName"
               value={formData.guardianLastName}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
             />
+            {errors.guardianLastName && <p className="text-red-500 text-sm mt-1 text-right">{errors.guardianLastName}</p>}
           </div>
           <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianMobile">
@@ -291,28 +331,13 @@ const CreateNormalPassenger = () => {
               name="guardianMobile"
               value={formData.guardianMobile}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
             />
-          </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="travelType">
-              نوع سفر
-            </label>
-            <select
-              id="travelType"
-              name="travelType"
-              value={formData.travelType}
-              onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
-              required
-            >
-              <option value="individual">انفرادی</option>
-              <option value="group">گروهی</option>
-            </select>
+            {errors.guardianMobile && <p className="text-red-500 text-sm mt-1 text-right">{errors.guardianMobile}</p>}
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+            className="w-full bg-purple-600 text-white p-3 rounded-lg hover:bg-purple-700 transition duration-300 flex items-center justify-center"
             disabled={isLoading}
           >
             {isLoading ? (

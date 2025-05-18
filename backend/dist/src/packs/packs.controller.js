@@ -16,81 +16,61 @@ exports.PacksController = void 0;
 const common_1 = require("@nestjs/common");
 const packs_service_1 = require("./packs.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
-const create_pack_dto_1 = require("./dto/create-pack.dto");
-const update_pack_dto_1 = require("./dto/update-pack.dto");
 let PacksController = class PacksController {
     packsService;
     constructor(packsService) {
         this.packsService = packsService;
     }
-    create(createPackDto, req) {
-        return this.packsService.create(createPackDto, req.user.role);
+    async findAllWithPassengers(type) {
+        return this.packsService.findAllWithPassengers(type);
     }
-    findAll(type, startDate, endDate) {
-        return this.packsService.findAll({ type, startDate, endDate });
+    async nextStage(id, status) {
+        return this.packsService.nextStage(+id, status);
     }
-    findOne(id) {
-        return this.packsService.findOne(+id);
+    async assignPassengerToPack(passengerData, req) {
+        return this.packsService.assignPassengerToPack(passengerData, req);
     }
-    findPassengers(id) {
-        return this.packsService.findPassengers(+id);
-    }
-    update(id, updatePackDto, req) {
-        return this.packsService.update(+id, updatePackDto, req.user.role);
-    }
-    remove(id, req) {
-        return this.packsService.remove(+id, req.user.role);
+    async addPassengerToPack(packId, passengerData, req) {
+        const userId = req.user?.['sub'];
+        if (!userId) {
+            throw new Error('کاربر معتبر نیست');
+        }
+        return this.packsService.addPassengerToPack(packId, { ...passengerData, createdById: userId });
     }
 };
 exports.PacksController = PacksController;
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Body)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "findAllWithPassengers", null);
+__decorate([
+    (0, common_1.Post)('next-stage/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "nextStage", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_pack_dto_1.CreatePackDto, Object]),
-    __metadata("design:returntype", void 0)
-], PacksController.prototype, "create", null);
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "assignPassengerToPack", null);
 __decorate([
-    (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('type')),
-    __param(1, (0, common_1.Query)('startDate')),
-    __param(2, (0, common_1.Query)('endDate')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", void 0)
-], PacksController.prototype, "findAll", null);
-__decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], PacksController.prototype, "findOne", null);
-__decorate([
-    (0, common_1.Get)(':id/passengers'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], PacksController.prototype, "findPassengers", null);
-__decorate([
-    (0, common_1.Put)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)(':packId/passengers'),
+    __param(0, (0, common_1.Param)('packId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_pack_dto_1.UpdatePackDto, Object]),
-    __metadata("design:returntype", void 0)
-], PacksController.prototype, "update", null);
-__decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
-], PacksController.prototype, "remove", null);
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "addPassengerToPack", null);
 exports.PacksController = PacksController = __decorate([
     (0, common_1.Controller)('packs'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

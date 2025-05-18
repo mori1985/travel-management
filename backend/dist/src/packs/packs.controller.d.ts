@@ -1,98 +1,113 @@
 import { PacksService } from './packs.service';
-import { CreatePackDto } from './dto/create-pack.dto';
-import { UpdatePackDto } from './dto/update-pack.dto';
+import { Request as ExpressRequest } from 'express';
 export declare class PacksController {
     private readonly packsService;
     constructor(packsService: PacksService);
-    create(createPackDto: CreatePackDto, req: any): Promise<{
-        id: number;
-        createdAt: Date;
-        travelDate: Date;
-        type: string;
-        repository: number;
-        company: string | null;
-        plate: string | null;
-        driver: string | null;
-        driverPhone: string | null;
-    }>;
-    findAll(type?: string, startDate?: string, endDate?: string): Promise<{
-        id: number;
-        createdAt: Date;
-        travelDate: Date;
-        type: string;
-        repository: number;
-        company: string | null;
-        plate: string | null;
-        driver: string | null;
-        driverPhone: string | null;
-    }[]>;
-    findOne(id: string): Promise<{
-        id: number;
-        createdAt: Date;
-        travelDate: Date;
-        type: string;
-        repository: number;
-        company: string | null;
-        plate: string | null;
-        driver: string | null;
-        driverPhone: string | null;
-    } | null>;
-    findPassengers(id: string): Promise<({
-        pack: {
+    findAllWithPassengers(type?: 'normal' | 'vip'): Promise<({
+        passengers: {
             id: number;
             createdAt: Date;
-            travelDate: Date;
-            type: string;
-            repository: number;
-            company: string | null;
-            plate: string | null;
-            driver: string | null;
-            driverPhone: string | null;
+            travelDate: string;
+            travelType: string;
+            packId: number | null;
+            firstName: string | null;
+            lastName: string | null;
+            gender: string;
+            phone: string;
+            nationalCode: string | null;
+            returnDate: string | null;
+            birthDate: string;
+            leaderName: string | null;
+            leaderPhone: string | null;
+            createdById: number;
+        }[];
+        busAssignment: {
+            id: number;
+            packId: number;
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
         } | null;
-        createdBy: {
-            id: number;
-            username: string;
-            password: string;
-            role: string;
-            createdAt: Date;
-        };
     } & {
         id: number;
         createdAt: Date;
+        travelDate: Date;
+        type: import(".prisma/client").$Enums.PackType;
+        repository: number;
+        status: import(".prisma/client").$Enums.PackStatus;
+        busAssignmentId: number | null;
+    })[]>;
+    nextStage(id: number, status: 'pending' | 'assigned' | 'confirmed'): Promise<{
+        message: string;
+        updatedPack: {
+            passengers: {
+                id: number;
+                createdAt: Date;
+                travelDate: string;
+                travelType: string;
+                packId: number | null;
+                firstName: string | null;
+                lastName: string | null;
+                gender: string;
+                phone: string;
+                nationalCode: string | null;
+                returnDate: string | null;
+                birthDate: string;
+                leaderName: string | null;
+                leaderPhone: string | null;
+                createdById: number;
+            }[];
+            busAssignment: {
+                id: number;
+                packId: number;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
+            } | null;
+        } & {
+            id: number;
+            createdAt: Date;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
+            repository: number;
+            status: import(".prisma/client").$Enums.PackStatus;
+            busAssignmentId: number | null;
+        };
+    }>;
+    assignPassengerToPack(passengerData: any, req: ExpressRequest): Promise<{
+        id: number;
+        createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
         firstName: string | null;
         lastName: string | null;
         gender: string;
         phone: string;
         nationalCode: string | null;
-        travelDate: string;
         returnDate: string | null;
         birthDate: string;
-        travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        packId: number | null;
         createdById: number;
-    })[]>;
-    update(id: string, updatePackDto: UpdatePackDto, req: any): Promise<{
-        id: number;
-        createdAt: Date;
-        travelDate: Date;
-        type: string;
-        repository: number;
-        company: string | null;
-        plate: string | null;
-        driver: string | null;
-        driverPhone: string | null;
     }>;
-    remove(id: string, req: any): Promise<{
+    addPassengerToPack(packId: number, passengerData: any, req: ExpressRequest): Promise<{
         id: number;
         createdAt: Date;
-        travelDate: Date;
-        type: string;
-        repository: number;
-        company: string | null;
-        plate: string | null;
-        driver: string | null;
-        driverPhone: string | null;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
+        firstName: string | null;
+        lastName: string | null;
+        gender: string;
+        phone: string;
+        nationalCode: string | null;
+        returnDate: string | null;
+        birthDate: string;
+        leaderName: string | null;
+        leaderPhone: string | null;
+        createdById: number;
     }>;
 }

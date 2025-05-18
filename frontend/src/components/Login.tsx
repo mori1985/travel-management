@@ -1,7 +1,7 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -9,6 +9,15 @@ const Login = () => {
   const [error, setError] = useState('');
   const { setToken, setRole } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const message = params.get('message');
+    if (message) {
+      setError(decodeURIComponent(message));
+    }
+  }, [location.search]);
 
   const decodeToken = (token: string) => {
     try {
@@ -42,11 +51,22 @@ const Login = () => {
       });
       console.log('Login response:', JSON.stringify(response.data, null, 2));
       const token = response.data.access_token;
+      localStorage.setItem('token', token);
       setToken(token);
       const decoded = decodeToken(token);
+      const userRole = decoded?.role || 'unknown';
       console.log('Decoded token:', decoded);
-      setRole(decoded?.role || 'unknown');
-      navigate('/packs');
+      setRole(userRole);
+      localStorage.setItem('role', userRole); // ذخیره نقش تو localStorage
+      
+      // هدایت بر اساس نقش
+      if (userRole === 'level1') {
+        navigate('/passengers');
+      } else if (userRole === 'level2' || userRole === 'admin') {
+        navigate('/packs');
+      } else {
+        navigate('/'); // در صورت نقش ناشناخته به صفحه اصلی
+      }
     } catch (err: any) {
       console.error('Login error:', err.response?.data || err.message);
       setError(`ورود ناموفق: ${err.response?.data?.message || err.message}`);

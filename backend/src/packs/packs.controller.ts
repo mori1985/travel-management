@@ -1,45 +1,38 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Request, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Request, UseGuards } from '@nestjs/common';
 import { PacksService } from './packs.service';
+import { Request as ExpressRequest } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CreatePackDto } from './dto/create-pack.dto';
-import { UpdatePackDto } from './dto/update-pack.dto';
 
 @Controller('packs')
 @UseGuards(JwtAuthGuard)
 export class PacksController {
   constructor(private readonly packsService: PacksService) {}
 
-  @Post()
-  create(@Body() createPackDto: CreatePackDto, @Request() req) {
-    return this.packsService.create(createPackDto, req.user.role);
-  }
-
   @Get()
-  findAll(
-    @Query('type') type?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+  async findAllWithPassengers(@Body('type') type?: 'normal' | 'vip') {
+    return this.packsService.findAllWithPassengers(type);
+  }
+
+  @Post('next-stage/:id')
+  async nextStage(@Param('id', ParseIntPipe) id: number, @Body('status') status: 'pending' | 'assigned' | 'confirmed') {
+    return this.packsService.nextStage(+id, status);
+  }
+
+  @Post()
+  async assignPassengerToPack(@Body() passengerData: any, @Request() req: ExpressRequest) {
+    return this.packsService.assignPassengerToPack(passengerData, req);
+  }
+
+  @Post(':packId/passengers')
+  async addPassengerToPack(
+    @Param('packId', ParseIntPipe) packId: number,
+    @Body() passengerData: any,
+    @Request() req: ExpressRequest,
   ) {
-    return this.packsService.findAll({ type, startDate, endDate });
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.packsService.findOne(+id);
-  }
-
-  @Get(':id/passengers')
-  findPassengers(@Param('id') id: string) {
-    return this.packsService.findPassengers(+id);
-  }
-
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updatePackDto: UpdatePackDto, @Request() req) {
-    return this.packsService.update(+id, updatePackDto, req.user.role);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string, @Request() req) {
-    return this.packsService.remove(+id, req.user.role);
+    const userId = req.user?.['sub'] as number;
+    if (!userId) {
+      throw new Error('کاربر معتبر نیست');
+    }
+    return this.packsService.addPassengerToPack(packId, { ...passengerData, createdById: userId });
   }
 }

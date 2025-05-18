@@ -12,83 +12,50 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PassengersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
-const client_1 = require("@prisma/client");
+const packs_service_1 = require("../packs/packs.service");
 let PassengersService = class PassengersService {
     prisma;
-    constructor(prisma) {
+    packsService;
+    constructor(prisma, packsService) {
         this.prisma = prisma;
+        this.packsService = packsService;
     }
-    async checkNationalCode(nationalCode) {
-        const passenger = await this.prisma.passenger.findUnique({
+    async create(data, req) {
+        return this.packsService.assignPassengerToPack(data, req);
+    }
+    async findOne(nationalCode) {
+        return this.prisma.passenger.findUnique({
             where: { nationalCode },
         });
+    }
+    async checkNationalCode(nationalCode) {
+        const passenger = await this.findOne(nationalCode);
         return { exists: !!passenger };
     }
-    async create(data, userRole, userId) {
-        if (userRole !== 'level1' && userRole !== 'admin') {
-            throw new common_1.ForbiddenException('Only level1 or admin can create passengers');
-        }
-        try {
-            return await this.prisma.passenger.create({
-                data: {
-                    firstName: data.firstName,
-                    lastName: data.lastName,
-                    gender: data.gender,
-                    phone: data.phone,
-                    nationalCode: data.nationalCode,
-                    travelDate: data.travelDate,
-                    returnDate: data.returnDate || null,
-                    birthDate: data.birthDate,
-                    travelType: data.travelType,
-                    leaderName: data.leaderName,
-                    leaderPhone: data.leaderPhone,
-                    packId: data.packId,
-                    createdById: userId,
-                },
-            });
-        }
-        catch (error) {
-            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                throw new common_1.ConflictException(`Passenger with nationalCode ${data.nationalCode} already exists`);
-            }
-            throw error;
-        }
-    }
-    async findAll(filters) {
-        const where = {};
-        if (filters.travelType) {
-            where.travelType = filters.travelType;
-        }
-        if (filters.startDate && filters.endDate) {
-            where.travelDate = {
-                gte: filters.startDate,
-                lte: filters.endDate,
-            };
-        }
-        return this.prisma.passenger.findMany({
-            where,
-            include: { pack: true, createdBy: true },
-        });
-    }
-    async findOne(id) {
-        return this.prisma.passenger.findUnique({
+    async updatePassenger(id, data) {
+        const passenger = await this.prisma.passenger.findUnique({
             where: { id },
-            include: { pack: true, createdBy: true },
         });
-    }
-    async update(id, data, userRole) {
-        if (userRole !== 'level1' && userRole !== 'admin') {
-            throw new common_1.ForbiddenException('Only level1 or admin can update passengers');
+        if (!passenger) {
+            throw new common_1.NotFoundException(`مسافر با شناسه ${id} یافت نشد`);
         }
         return this.prisma.passenger.update({
             where: { id },
-            data,
+            data: {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                nationalCode: data.nationalCode,
+                phone: data.phone,
+                travelDate: data.travelDate,
+                returnDate: data.returnDate,
+                birthDate: data.birthDate,
+                leaderName: data.leaderName,
+                leaderPhone: data.leaderPhone,
+                gender: data.gender,
+            },
         });
     }
-    async remove(id, userRole) {
-        if (userRole !== 'admin') {
-            throw new common_1.ForbiddenException('Only admin can delete passengers');
-        }
+    async delete(id) {
         return this.prisma.passenger.delete({
             where: { id },
         });
@@ -97,6 +64,6 @@ let PassengersService = class PassengersService {
 exports.PassengersService = PassengersService;
 exports.PassengersService = PassengersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, packs_service_1.PacksService])
 ], PassengersService);
 //# sourceMappingURL=passengers.service.js.map

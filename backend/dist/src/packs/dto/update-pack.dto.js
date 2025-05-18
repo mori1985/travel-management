@@ -15,10 +15,6 @@ class UpdatePackDto {
     travelDate;
     type;
     repository;
-    company;
-    plate;
-    driver;
-    driverPhone;
 }
 exports.UpdatePackDto = UpdatePackDto;
 __decorate([
@@ -38,24 +34,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdatePackDto.prototype, "repository", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], UpdatePackDto.prototype, "company", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], UpdatePackDto.prototype, "plate", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], UpdatePackDto.prototype, "driver", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], UpdatePackDto.prototype, "driverPhone", void 0);
 //# sourceMappingURL=update-pack.dto.js.map

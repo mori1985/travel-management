@@ -16,33 +16,33 @@ exports.PassengersController = void 0;
 const common_1 = require("@nestjs/common");
 const passengers_service_1 = require("./passengers.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
-const create_passenger_dto_1 = require("./dto/create-passenger.dto");
-const client_1 = require("@prisma/client");
 let PassengersController = class PassengersController {
     passengersService;
     constructor(passengersService) {
         this.passengersService = passengersService;
     }
+    async create(data, req) {
+        return this.passengersService.create(data, req);
+    }
     async checkNationalCode(nationalCode) {
         return this.passengersService.checkNationalCode(nationalCode);
     }
-    create(createPassengerDto, req) {
-        return this.passengersService.create(createPassengerDto, req.user.role, req.user.userId);
+    async updatePassenger(id, passengerData) {
+        return this.passengersService.updatePassenger(parseInt(id), passengerData);
     }
-    findAll(travelType, startDate, endDate) {
-        return this.passengersService.findAll({ travelType, startDate, endDate });
-    }
-    findOne(id) {
-        return this.passengersService.findOne(+id);
-    }
-    update(id, data, req) {
-        return this.passengersService.update(+id, data, req.user.role);
-    }
-    remove(id, req) {
-        return this.passengersService.remove(+id, req.user.role);
+    async delete(id) {
+        return this.passengersService.delete(+id);
     }
 };
 exports.PassengersController = PassengersController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PassengersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('check-national-code/:nationalCode'),
     __param(0, (0, common_1.Param)('nationalCode')),
@@ -51,46 +51,20 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PassengersController.prototype, "checkNationalCode", null);
 __decorate([
-    (0, common_1.Post)(),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_passenger_dto_1.CreatePassengerDto, Object]),
-    __metadata("design:returntype", void 0)
-], PassengersController.prototype, "create", null);
-__decorate([
-    (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('travelType')),
-    __param(1, (0, common_1.Query)('startDate')),
-    __param(2, (0, common_1.Query)('endDate')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", void 0)
-], PassengersController.prototype, "findAll", null);
-__decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], PassengersController.prototype, "findOne", null);
-__decorate([
     (0, common_1.Put)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, Object]),
-    __metadata("design:returntype", void 0)
-], PassengersController.prototype, "update", null);
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PassengersController.prototype, "updatePassenger", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
-], PassengersController.prototype, "remove", null);
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], PassengersController.prototype, "delete", null);
 exports.PassengersController = PassengersController = __decorate([
     (0, common_1.Controller)('passengers'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

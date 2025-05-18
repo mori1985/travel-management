@@ -1,93 +1,158 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Prisma, Pack } from '@prisma/client';
-import { CreatePackDto } from './dto/create-pack.dto';
-import { UpdatePackDto } from './dto/update-pack.dto';
+import { Request as ExpressRequest } from 'express';
 
 @Injectable()
 export class PacksService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreatePackDto, userRole: string): Promise<Pack> {
-    if (userRole !== 'level1' && userRole !== 'admin') {
-      throw new ForbiddenException('Only level1 or admin can create packs');
-    }
-    return this.prisma.pack.create({
-      data: {
-        travelDate: new Date(data.travelDate),
-        type: data.type,
-        repository: data.repository,
-        company: data.company,
-        plate: data.plate,
-        driver: data.driver,
-        driverPhone: data.driverPhone,
-      },
-    });
-  }
-
-  async findAll(filters: { type?: string; startDate?: string; endDate?: string }): Promise<Pack[]> {
-    const where: Prisma.PackWhereInput = {};
-    if (filters.type) {
-      where.type = filters.type;
-    }
-    if (filters.startDate && filters.endDate) {
-      where.travelDate = {
-        gte: new Date(filters.startDate),
-        lte: new Date(filters.endDate),
-      };
-    }
+  async findAllWithPassengers(type?: 'normal' | 'vip') {
     return this.prisma.pack.findMany({
-      where,
-      include: { passengers: true },
-    });
-  }
-
-  async findOne(id: number): Promise<Pack | null> {
-    const pack = await this.prisma.pack.findUnique({
-      where: { id },
-      include: { passengers: true },
-    });
-    if (!pack) {
-      throw new NotFoundException(`Pack with ID ${id} not found`);
-    }
-    return pack;
-  }
-
-  async findPassengers(id: number): Promise<Prisma.PassengerGetPayload<{ include: { pack: true; createdBy: true } }>[]> {
-    const pack = await this.prisma.pack.findUnique({
-      where: { id },
-      include: { passengers: { include: { pack: true, createdBy: true } } },
-    });
-    if (!pack) {
-      throw new NotFoundException(`Pack with ID ${id} not found`);
-    }
-    return pack.passengers;
-  }
-
-  async update(id: number, data: UpdatePackDto, userRole: string): Promise<Pack> {
-    if (userRole !== 'level1' && userRole !== 'admin') {
-      throw new ForbiddenException('Only level1 or admin can update packs');
-    }
-    return this.prisma.pack.update({
-      where: { id },
-      data: {
-        travelDate: data.travelDate ? new Date(data.travelDate) : undefined,
-        type: data.type,
-        repository: data.repository,
-        company: data.company,
-        plate: data.plate,
-        driver: data.driver,
-        driverPhone: data.driverPhone,
+      include: { passengers: true, busAssignment: true },
+      where: { 
+        status: 'pending',
+        ...(type && { type }),
       },
+      orderBy: { travelDate: 'asc' },
     });
   }
 
-  async remove(id: number, userRole: string): Promise<Pack> {
-    if (userRole !== 'admin') {
-      throw new ForbiddenException('Only admin can delete packs');
+  async assignPassengerToPack(passengerData: any, req: ExpressRequest) {
+    const { travelDate, travelType, packId } = passengerData;
+
+    const userId = req.user?.['sub'] as number;
+    if (!userId) {
+      throw new Error('کاربر معتبر نیست');
     }
-    return this.prisma.pack.delete({
-      where: { id },
+
+    let pack;
+    if (packId) {
+      // اگه packId داده شده، از همون پک استفاده کن
+      pack = await this.prisma.pack.findUnique({
+        where: { id: packId },
+        include: { passengers: true },
+      });
+      if (!pack) {
+        throw new Error('پک یافت نشد');
+      }
+    } else {
+      // اگه packId داده نشده، پک رو پیدا کن یا بساز
+      const parsedTravelDate = new Date(travelDate).toISOString().split('T')[0];
+      pack = await this.prisma.pack.findFirst({
+        where: {
+          travelDate: new Date(parsedTravelDate),
+          type: travelType,
+          status: 'pending',
+        },
+        include: { passengers: true },
+      });
+
+      if (!pack) {
+        pack = await this.prisma.pack.create({
+          data: {
+            travelDate: new Date(parsedTravelDate),
+            type: travelType,
+            repository: 1,
+            status: 'pending',
+            passengers: { create: [] },
+          },
+          include: { passengers: true },
+        });
+      }
+    }
+
+    if (!pack) {
+      throw new Error('ایجاد پک با شکست مواجه شد');
+    }
+
+    const passengerCount = pack.passengers.length;
+    const maxCapacity = pack.type === 'vip' ? 25 : 40;
+    if (passengerCount >= maxCapacity) {
+      // اگه ظرفیت پر شده، یه پک جدید بساز
+      pack = await this.prisma.pack.create({
+        data: {
+          travelDate: pack.travelDate,
+          type: pack.type,
+          repository: 1,
+          status: 'pending',
+          passengers: { create: [] },
+        },
+        include: { passengers: true },
+      });
+    }
+
+    const passengerDataToCreate = {
+      firstName: passengerData.firstName,
+      lastName: passengerData.lastName,
+      nationalCode: passengerData.nationalCode,
+      phone: passengerData.phone,
+      travelDate: passengerData.travelDate,
+      returnDate: passengerData.returnDate,
+      birthDate: passengerData.birthDate,
+      leaderName: passengerData.leaderName,
+      leaderLastName: passengerData.leaderLastName,
+      leaderPhone: passengerData.leaderPhone,
+      gender: passengerData.gender,
+      packId: pack.id,
+      createdById: userId,
+      travelType: passengerData.travelType || pack.type,
+    };
+
+    return this.prisma.passenger.create({
+      data: passengerDataToCreate,
     });
+  }
+
+  async addPassengerToPack(packId: number, passengerData: any) {
+    const pack = await this.prisma.pack.findUnique({
+      where: { id: packId },
+      include: { passengers: true },
+    });
+
+    if (!pack) {
+      throw new Error('پک یافت نشد');
+    }
+
+    const passengerCount = pack.passengers.length;
+    if (passengerCount >= (pack.type === 'vip' ? 25 : 40)) {
+      throw new Error('ظرفیت پک پر شده است');
+    }
+
+    const parsedTravelDate = new Date(passengerData.travelDate).toISOString().split('T')[0];
+    const passengerDataToCreate = {
+      firstName: passengerData.firstName,
+      lastName: passengerData.lastName,
+      nationalCode: passengerData.nationalCode,
+      phone: passengerData.phone,
+      travelDate: parsedTravelDate,
+      returnDate: passengerData.returnDate || null,
+      birthDate: passengerData.birthDate || null,
+      travelType: pack.type,
+      leaderName: passengerData.leaderName || null,
+      leaderLastName: passengerData.leaderLastName || null,
+      leaderPhone: passengerData.leaderPhone || null,
+      gender: passengerData.gender || 'unknown',
+      packId: pack.id,
+      createdById: passengerData.createdById || 1,
+    };
+
+    const newPassenger = await this.prisma.passenger.create({
+      data: passengerDataToCreate,
+    });
+
+    return newPassenger;
+  }
+
+  async nextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed') {
+    const updatedPack = await this.prisma.pack.update({
+      where: { id: packId },
+      data: { status },
+      include: { passengers: true, busAssignment: true },
+    });
+
+    if (status === 'pending') {
+      return { message: 'پک با موفقیت به مرحله قبل بازگشت', updatedPack };
+    }
+    return { message: 'پک با موفقیت به مرحله بعدی منتقل شد', updatedPack };
   }
 }

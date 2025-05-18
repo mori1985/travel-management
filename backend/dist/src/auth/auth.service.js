@@ -22,14 +22,24 @@ let AuthService = class AuthService {
         this.jwtService = jwtService;
     }
     async signIn(username, pass) {
+        console.log(`Attempting login for username: ${username}, password: ${pass}`);
         const user = await this.prisma.user.findUnique({ where: { username } });
-        if (!user || !(await bcrypt.compare(pass, user.password))) {
+        if (!user) {
+            console.log(`User ${username} not found in database`);
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        }
+        console.log(`User found: ${JSON.stringify(user, null, 2)}`);
+        console.log(`Stored hashed password for ${username}: ${user.password}`);
+        const isPasswordValid = await bcrypt.compare(pass, user.password);
+        console.log(`Password comparison result for ${username}: ${isPasswordValid}`);
+        if (!isPasswordValid) {
+            console.log(`Password mismatch for user ${username}`);
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
         const payload = { sub: user.id, username: user.username, role: user.role };
-        return {
-            access_token: await this.jwtService.signAsync(payload),
-        };
+        const token = await this.jwtService.signAsync(payload);
+        console.log(`Generated token for ${username}: ${token}`);
+        return { access_token: token };
     }
 };
 exports.AuthService = AuthService;

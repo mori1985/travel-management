@@ -44,32 +44,31 @@ const Navbar = () => {
               </svg>
             </button>
             <div
-              className={`${
-                isOpen ? 'block' : 'hidden'
-              } sm:flex sm:items-center w-full sm:w-auto absolute sm:static top-16 left-0 right-0 bg-blue-600 sm:bg-transparent p-4 sm:p-0 z-10`}
+              className={`${isOpen ? 'block' : 'hidden'
+                } sm:flex sm:items-center w-full sm:w-auto absolute sm:static top-16 left-0 right-0 bg-blue-600 sm:bg-transparent p-4 sm:p-0 z-10`}
             >
               <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-x-reverse">
+                {/* لینک‌هایی که همه می‌تونن ببینن */}
                 <Link
-                  to="/packs"
+                  to="/"
                   className="text-white hover:text-blue-200 mb-2 sm:mb-0"
                   onClick={() => setIsOpen(false)}
                 >
-                  پک‌های مسافرتی
+                  صفحه اصلی
                 </Link>
-                <Link
-                  to="/passengers"
-                  className="text-white hover:text-blue-200 mb-2 sm:mb-0"
-                  onClick={() => setIsOpen(false)}
-                >
-                  مسافران
-                </Link>
-                <Link
-                  to="/buses"
-                  className="text-white hover:text-blue-200 mb-2 sm:mb-0"
-                  onClick={() => setIsOpen(false)}
-                >
-                  اتوبوس‌ها
-                </Link>
+
+                {/* لینک‌های مربوط به مسافران - برای level1, level2, admin */}
+                {(role === 'level1' || role === 'level2' || role === 'admin') && (
+                  <Link
+                    to="/passengers"
+                    className="text-white hover:text-blue-200 mb-2 sm:mb-0"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    مسافران
+                  </Link>
+                )}
+
+                {/* ثبت مسافر - فقط برای level1 و admin */}
                 {(role === 'level1' || role === 'admin') && (
                   <>
                     <Link
@@ -88,6 +87,41 @@ const Navbar = () => {
                     </Link>
                   </>
                 )}
+
+                {/* مدیریت پک‌ها - فقط برای level2 و admin */}
+                {(role === 'level2' || role === 'admin') && (
+                  <Link
+                    to="/packs"
+                    className="text-white hover:text-blue-200 mb-2 sm:mb-0"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    پک‌های مسافرتی
+                  </Link>
+                )}
+
+                {/* تخصیص اتوبوس - فقط برای level2 و admin */}
+                {(role === 'level2' || role === 'admin') && (
+                  <Link
+                    to="/bus-assignment"
+                    className="text-white hover:text-blue-200 mb-2 sm:mb-0"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    تخصیص اتوبوس
+                  </Link>
+                )}
+
+                {/* ثبت نهایی - فقط برای admin */}
+                {role === 'admin' && (
+                  <Link
+                    to="/final-confirmation"
+                    className="text-white hover:text-blue-200 mb-2 sm:mb-0"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    ثبت نهایی
+                  </Link>
+                )}
+
+                {/* دکمه خروج - برای همه */}
                 <button
                   onClick={() => {
                     handleLogout();

@@ -1,95 +1,60 @@
 import { PassengersService } from './passengers.service';
-import { CreatePassengerDto } from './dto/create-passenger.dto';
-import { Prisma } from '@prisma/client';
+import { Request as ExpressRequest } from 'express';
 export declare class PassengersController {
     private readonly passengersService;
     constructor(passengersService: PassengersService);
+    create(data: any, req: ExpressRequest): Promise<{
+        id: number;
+        createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
+        firstName: string | null;
+        lastName: string | null;
+        gender: string;
+        phone: string;
+        nationalCode: string | null;
+        returnDate: string | null;
+        birthDate: string;
+        leaderName: string | null;
+        leaderPhone: string | null;
+        createdById: number;
+    }>;
     checkNationalCode(nationalCode: string): Promise<{
         exists: boolean;
     }>;
-    create(createPassengerDto: CreatePassengerDto, req: any): Promise<{
+    updatePassenger(id: string, passengerData: any): Promise<{
         id: number;
         createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
         firstName: string | null;
         lastName: string | null;
         gender: string;
         phone: string;
         nationalCode: string | null;
-        travelDate: string;
         returnDate: string | null;
         birthDate: string;
-        travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        packId: number | null;
         createdById: number;
     }>;
-    findAll(travelType?: string, startDate?: string, endDate?: string): Promise<{
+    delete(id: number): Promise<{
         id: number;
         createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
         firstName: string | null;
         lastName: string | null;
         gender: string;
         phone: string;
         nationalCode: string | null;
-        travelDate: string;
         returnDate: string | null;
         birthDate: string;
-        travelType: string;
         leaderName: string | null;
         leaderPhone: string | null;
-        packId: number | null;
-        createdById: number;
-    }[]>;
-    findOne(id: string): Promise<{
-        id: number;
-        createdAt: Date;
-        firstName: string | null;
-        lastName: string | null;
-        gender: string;
-        phone: string;
-        nationalCode: string | null;
-        travelDate: string;
-        returnDate: string | null;
-        birthDate: string;
-        travelType: string;
-        leaderName: string | null;
-        leaderPhone: string | null;
-        packId: number | null;
-        createdById: number;
-    } | null>;
-    update(id: string, data: Prisma.PassengerUpdateInput, req: any): Promise<{
-        id: number;
-        createdAt: Date;
-        firstName: string | null;
-        lastName: string | null;
-        gender: string;
-        phone: string;
-        nationalCode: string | null;
-        travelDate: string;
-        returnDate: string | null;
-        birthDate: string;
-        travelType: string;
-        leaderName: string | null;
-        leaderPhone: string | null;
-        packId: number | null;
-        createdById: number;
-    }>;
-    remove(id: string, req: any): Promise<{
-        id: number;
-        createdAt: Date;
-        firstName: string | null;
-        lastName: string | null;
-        gender: string;
-        phone: string;
-        nationalCode: string | null;
-        travelDate: string;
-        returnDate: string | null;
-        birthDate: string;
-        travelType: string;
-        leaderName: string | null;
-        leaderPhone: string | null;
-        packId: number | null;
         createdById: number;
     }>;
 }

@@ -1,19 +1,79 @@
 import { PrismaService } from '../prisma.service';
-import { Prisma, Passenger } from '@prisma/client';
-import { CreatePassengerDto } from './dto/create-passenger.dto';
+import { PacksService } from '../packs/packs.service';
+import { Request as ExpressRequest } from 'express';
 export declare class PassengersService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private packsService;
+    constructor(prisma: PrismaService, packsService: PacksService);
+    create(data: any, req: ExpressRequest): Promise<{
+        id: number;
+        createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
+        firstName: string | null;
+        lastName: string | null;
+        gender: string;
+        phone: string;
+        nationalCode: string | null;
+        returnDate: string | null;
+        birthDate: string;
+        leaderName: string | null;
+        leaderPhone: string | null;
+        createdById: number;
+    }>;
+    findOne(nationalCode: string): Promise<{
+        id: number;
+        createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
+        firstName: string | null;
+        lastName: string | null;
+        gender: string;
+        phone: string;
+        nationalCode: string | null;
+        returnDate: string | null;
+        birthDate: string;
+        leaderName: string | null;
+        leaderPhone: string | null;
+        createdById: number;
+    } | null>;
     checkNationalCode(nationalCode: string): Promise<{
         exists: boolean;
     }>;
-    create(data: CreatePassengerDto, userRole: string, userId: number): Promise<Passenger>;
-    findAll(filters: {
-        travelType?: string;
-        startDate?: string;
-        endDate?: string;
-    }): Promise<Passenger[]>;
-    findOne(id: number): Promise<Passenger | null>;
-    update(id: number, data: Prisma.PassengerUpdateInput, userRole: string): Promise<Passenger>;
-    remove(id: number, userRole: string): Promise<Passenger>;
+    updatePassenger(id: number, data: any): Promise<{
+        id: number;
+        createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
+        firstName: string | null;
+        lastName: string | null;
+        gender: string;
+        phone: string;
+        nationalCode: string | null;
+        returnDate: string | null;
+        birthDate: string;
+        leaderName: string | null;
+        leaderPhone: string | null;
+        createdById: number;
+    }>;
+    delete(id: number): Promise<{
+        id: number;
+        createdAt: Date;
+        travelDate: string;
+        travelType: string;
+        packId: number | null;
+        firstName: string | null;
+        lastName: string | null;
+        gender: string;
+        phone: string;
+        nationalCode: string | null;
+        returnDate: string | null;
+        birthDate: string;
+        leaderName: string | null;
+        leaderPhone: string | null;
+        createdById: number;
+    }>;
 }
