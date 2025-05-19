@@ -27,7 +27,6 @@ export class PacksService {
 
     let pack;
     if (packId) {
-      // اگه packId داده شده، از همون پک استفاده کن
       pack = await this.prisma.pack.findUnique({
         where: { id: packId },
         include: { passengers: true },
@@ -36,7 +35,6 @@ export class PacksService {
         throw new Error('پک یافت نشد');
       }
     } else {
-      // اگه packId داده نشده، پک رو پیدا کن یا بساز
       const parsedTravelDate = new Date(travelDate).toISOString().split('T')[0];
       pack = await this.prisma.pack.findFirst({
         where: {
@@ -68,7 +66,6 @@ export class PacksService {
     const passengerCount = pack.passengers.length;
     const maxCapacity = pack.type === 'vip' ? 25 : 40;
     if (passengerCount >= maxCapacity) {
-      // اگه ظرفیت پر شده، یه پک جدید بساز
       pack = await this.prisma.pack.create({
         data: {
           travelDate: pack.travelDate,
@@ -144,15 +141,39 @@ export class PacksService {
   }
 
   async nextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed') {
-    const updatedPack = await this.prisma.pack.update({
-      where: { id: packId },
-      data: { status },
-      include: { passengers: true, busAssignment: true },
-    });
+    return this.prisma.$transaction(async (prisma) => {
+      const pack = await prisma.pack.findUnique({
+        where: { id: packId },
+        include: { busAssignment: true },
+      });
 
-    if (status === 'pending') {
-      return { message: 'پک با موفقیت به مرحله قبل بازگشت', updatedPack };
-    }
-    return { message: 'پک با موفقیت به مرحله بعدی منتقل شد', updatedPack };
+      if (!pack) {
+        throw new Error('پک یافت نشد');
+      }
+
+      if (status === 'pending' && pack.busAssignment) {
+        await prisma.busAssignment.delete({
+          where: { packId: packId },
+        });
+      }
+
+      const updatedPack = await prisma.pack.update({
+        where: { id: packId },
+        data: { status },
+        include: { passengers: true, busAssignment: true },
+      });
+
+      await prisma.packHistory.create({
+        data: {
+          packId: packId,
+          status: status,
+        },
+      });
+
+      if (status === 'pending') {
+        return { message: 'پک با موفقیت به مرحله قبل بازگشت', updatedPack };
+      }
+      return { message: 'پک با موفقیت به مرحله بعدی منتقل شد', updatedPack };
+    });
   }
 }

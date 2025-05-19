@@ -8,7 +8,7 @@ export class BusAssignmentService {
 
   async findAllWithPassengers() {
     return this.prisma.pack.findMany({
-      where: { status: 'assigned' }, // فقط پک‌های تخصیص‌شده
+      where: { status: 'assigned' },
       include: { passengers: true, busAssignment: true },
       orderBy: { travelDate: 'asc' },
     });
@@ -28,21 +28,30 @@ export class BusAssignmentService {
       throw new Error('این پک قبلاً تخصیص اتوبوس شده است');
     }
 
-    const busAssignment = await this.prisma.busAssignment.create({
-      data: {
-        company: busAssignmentData.company,
-        plate: busAssignmentData.plate,
-        driver: busAssignmentData.driver,
-        driverPhone: busAssignmentData.driverPhone,
-        packId: packId,
-      },
-    });
+    return this.prisma.$transaction(async (prisma) => {
+      const busAssignment = await prisma.busAssignment.create({
+        data: {
+          company: busAssignmentData.company,
+          plate: busAssignmentData.plate,
+          driver: busAssignmentData.driver,
+          driverPhone: busAssignmentData.driverPhone,
+          packId: packId,
+        },
+      });
 
-    await this.prisma.pack.update({
-      where: { id: packId },
-      data: { status: 'confirmed' }, // بعد از تخصیص، به مرحله تأیید نهایی برو
-    });
+      await prisma.pack.update({
+        where: { id: packId },
+        data: { status: 'confirmed' },
+      });
 
-    return { message: 'تخصیص اتوبوس با موفقیت انجام شد', busAssignment };
+      await prisma.packHistory.create({
+        data: {
+          packId: packId,
+          status: 'confirmed',
+        },
+      });
+
+      return { message: 'تخصیص اتوبوس با موفقیت انجام شد', busAssignment };
+    });
   }
 }

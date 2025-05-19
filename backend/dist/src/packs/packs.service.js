@@ -138,15 +138,35 @@ let PacksService = class PacksService {
         return newPassenger;
     }
     async nextStage(packId, status) {
-        const updatedPack = await this.prisma.pack.update({
-            where: { id: packId },
-            data: { status },
-            include: { passengers: true, busAssignment: true },
+        return this.prisma.$transaction(async (prisma) => {
+            const pack = await prisma.pack.findUnique({
+                where: { id: packId },
+                include: { busAssignment: true },
+            });
+            if (!pack) {
+                throw new Error('پک یافت نشد');
+            }
+            if (status === 'pending' && pack.busAssignment) {
+                await prisma.busAssignment.delete({
+                    where: { packId: packId },
+                });
+            }
+            const updatedPack = await prisma.pack.update({
+                where: { id: packId },
+                data: { status },
+                include: { passengers: true, busAssignment: true },
+            });
+            await prisma.packHistory.create({
+                data: {
+                    packId: packId,
+                    status: status,
+                },
+            });
+            if (status === 'pending') {
+                return { message: 'پک با موفقیت به مرحله قبل بازگشت', updatedPack };
+            }
+            return { message: 'پک با موفقیت به مرحله بعدی منتقل شد', updatedPack };
         });
-        if (status === 'pending') {
-            return { message: 'پک با موفقیت به مرحله قبل بازگشت', updatedPack };
-        }
-        return { message: 'پک با موفقیت به مرحله بعدی منتقل شد', updatedPack };
     }
 };
 exports.PacksService = PacksService;

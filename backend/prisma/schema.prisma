@@ -47,6 +47,7 @@ model Pack {
   passengers    Passenger[]
   busAssignment BusAssignment? @relation(fields: [busAssignmentId], references: [id], onDelete: Cascade)
   busAssignmentId Int?         @unique
+  history       PackHistory[]
   createdAt     DateTime      @default(now())
   smsHistory    SmsHistory[]
 
@@ -71,6 +72,14 @@ model SmsHistory {
   sentAt    DateTime
   count     Int
   createdAt DateTime @default(now())
+}
+
+model PackHistory {
+  id        Int      @id @default(autoincrement())
+  packId    Int
+  status    String
+  changedAt DateTime @default(now())
+  pack      Pack     @relation(fields: [packId], references: [id], onDelete: Cascade)
 }
 
 enum PackType {

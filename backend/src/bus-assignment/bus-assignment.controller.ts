@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Param, Body, HttpCode, HttpStatus, UseGuards, Get } from '@nestjs/common';
 import { BusAssignmentService } from './bus-assignment.service';
 import { CreateBusAssignmentDto } from './create-bus-assignment.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,6 +7,11 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 export class BusAssignmentController {
   constructor(private readonly busAssignmentService: BusAssignmentService) {}
+
+  @Get('/packs/bus-assignment')
+  async findAllWithPassengers() {
+    return this.busAssignmentService.findAllWithPassengers();
+  }
 
   @Post(':packId')
   @HttpCode(HttpStatus.CREATED)

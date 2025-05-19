@@ -22,11 +22,20 @@ let BusAssignmentController = class BusAssignmentController {
     constructor(busAssignmentService) {
         this.busAssignmentService = busAssignmentService;
     }
+    async findAllWithPassengers() {
+        return this.busAssignmentService.findAllWithPassengers();
+    }
     async assignBus(packId, busAssignmentData) {
         return this.busAssignmentService.assignBus(+packId, busAssignmentData);
     }
 };
 exports.BusAssignmentController = BusAssignmentController;
+__decorate([
+    (0, common_1.Get)('/packs/bus-assignment'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BusAssignmentController.prototype, "findAllWithPassengers", null);
 __decorate([
     (0, common_1.Post)(':packId'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),

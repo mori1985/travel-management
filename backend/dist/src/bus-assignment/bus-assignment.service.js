@@ -35,20 +35,28 @@ let BusAssignmentService = class BusAssignmentService {
         if (pack.busAssignment) {
             throw new Error('این پک قبلاً تخصیص اتوبوس شده است');
         }
-        const busAssignment = await this.prisma.busAssignment.create({
-            data: {
-                company: busAssignmentData.company,
-                plate: busAssignmentData.plate,
-                driver: busAssignmentData.driver,
-                driverPhone: busAssignmentData.driverPhone,
-                packId: packId,
-            },
+        return this.prisma.$transaction(async (prisma) => {
+            const busAssignment = await prisma.busAssignment.create({
+                data: {
+                    company: busAssignmentData.company,
+                    plate: busAssignmentData.plate,
+                    driver: busAssignmentData.driver,
+                    driverPhone: busAssignmentData.driverPhone,
+                    packId: packId,
+                },
+            });
+            await prisma.pack.update({
+                where: { id: packId },
+                data: { status: 'confirmed' },
+            });
+            await prisma.packHistory.create({
+                data: {
+                    packId: packId,
+                    status: 'confirmed',
+                },
+            });
+            return { message: 'تخصیص اتوبوس با موفقیت انجام شد', busAssignment };
         });
-        await this.prisma.pack.update({
-            where: { id: packId },
-            data: { status: 'confirmed' },
-        });
-        return { message: 'تخصیص اتوبوس با موفقیت انجام شد', busAssignment };
     }
 };
 exports.BusAssignmentService = BusAssignmentService;

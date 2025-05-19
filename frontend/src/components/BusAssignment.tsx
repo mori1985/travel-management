@@ -45,15 +45,34 @@ const BusAssignment = () => {
   const location = useLocation();
   const companies = ['شرکت سیروسفر', 'شرکت همسفر', 'شرکت ایران‌پیما', 'شرکت رویال سفر'];
 
-  // چک کردن نقش کاربر
   const role = localStorage.getItem('role');
   useEffect(() => {
     if (role !== 'level2' && role !== 'admin') {
-      navigate('/'); // هدایت به صفحه اصلی اگه نقش مناسب نبود
+      navigate('/');
     }
   }, [role, navigate]);
 
+  const fetchPacks = async () => {
+    try {
+      const response = await axios.get('/packs/bus-assignment');
+      setPacks(response.data);
+      const newFormData = response.data.reduce((acc: { [packId: number]: BusAssignment }, pack: Pack) => {
+        acc[pack.id] = {
+          companyName: '',
+          licensePlate: '',
+          driverName: '',
+          driverPhone: '',
+        };
+        return acc;
+      }, {});
+      setFormData(newFormData);
+    } catch (err: any) {
+      console.error('Error fetching packs:', err);
+    }
+  };
+
   useEffect(() => {
+    fetchPacks();
     const initialPack = location.state?.pack;
     if (initialPack) {
       setPacks((prevPacks) => {
@@ -86,7 +105,6 @@ const BusAssignment = () => {
         [field]: value,
       },
     }));
-    // پاک کردن خطا هنگام تغییر مقدار
     setErrors((prev) => ({
       ...prev,
       [packId]: {
@@ -181,17 +199,8 @@ const BusAssignment = () => {
       });
       console.log('Bus assignment response:', response.data);
 
-      const updatedPack = { ...pack, busAssignment: assignmentData };
-      setPacks((prevPacks) =>
-        prevPacks.map((p) => (p.id === packId ? updatedPack : p))
-      );
-      setFormData((prev) => {
-        const newFormData = { ...prev };
-        delete newFormData[packId];
-        return newFormData;
-      });
-
-      navigate('/final-confirmation', { state: { pack: updatedPack } });
+      await fetchPacks();
+      navigate('/final-confirmation', { state: { pack: { ...pack, busAssignment: assignmentData } } });
     } catch (err: any) {
       console.error('Error saving bus assignment:', err);
       alert('خطا در ارسال به مرحله بعدی: ' + (err.response?.data?.message || err.message));
@@ -204,7 +213,7 @@ const BusAssignment = () => {
     try {
       const response = await axios.post(`/packs/next-stage/${packId}`, { status: 'pending' });
       console.log('Previous stage response:', response.data);
-      setPacks((prevPacks) => prevPacks.filter((p) => p.id !== packId));
+      await fetchPacks();
       setShowReturnConfirm(null);
       navigate('/packs');
     } catch (err: any) {
