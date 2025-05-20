@@ -23,11 +23,13 @@ export declare class BusAssignmentController {
         }[];
         busAssignment: {
             id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
             packId: number;
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
+            company: string | null;
+            plate: string | null;
+            driver: string | null;
+            driverPhone: string | null;
         } | null;
     } & {
         id: number;
@@ -37,16 +39,48 @@ export declare class BusAssignmentController {
         repository: number;
         status: import(".prisma/client").$Enums.PackStatus;
         busAssignmentId: number | null;
+        finalConfirmationId: number | null;
     })[]>;
     assignBus(packId: string, busAssignmentData: CreateBusAssignmentDto): Promise<{
         message: string;
         busAssignment: {
+            pack: ({
+                passengers: {
+                    id: number;
+                    createdAt: Date;
+                    travelDate: string;
+                    travelType: string;
+                    packId: number | null;
+                    firstName: string | null;
+                    lastName: string | null;
+                    gender: string;
+                    phone: string;
+                    nationalCode: string | null;
+                    returnDate: string | null;
+                    birthDate: string;
+                    leaderName: string | null;
+                    leaderPhone: string | null;
+                    createdById: number;
+                }[];
+            } & {
+                id: number;
+                createdAt: Date;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
+                repository: number;
+                status: import(".prisma/client").$Enums.PackStatus;
+                busAssignmentId: number | null;
+                finalConfirmationId: number | null;
+            }) | null;
+        } & {
             id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
             packId: number;
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
+            company: string | null;
+            plate: string | null;
+            driver: string | null;
+            driverPhone: string | null;
         };
     }>;
 }

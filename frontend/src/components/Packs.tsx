@@ -16,7 +16,6 @@ interface Passenger {
   returnDate?: string;
   birthDate?: string;
   leaderName?: string;
-  leaderLastName?: string;
   leaderPhone?: string;
   gender: string;
 }
@@ -72,13 +71,11 @@ const Packs = () => {
 
   const handleNextStage = async (packId: number) => {
     try {
-      const pack = packs.find((p) => p.id === packId);
-      if (pack) {
-        const response = await axios.post(`/packs/next-stage/${packId}`, { status: 'assigned' });
-        console.log('Next stage response:', response.data);
-        setPacks((prevPacks) => prevPacks.filter((p) => p.id !== packId));
-        navigate('/bus-assignment', { state: { pack } });
-      }
+      const response = await axios.post(`/packs/next-stage/${packId}`, { 
+        status: 'assigned'
+      });
+      console.log('Next stage response:', response.data);
+      navigate('/bus-assignment');
     } catch (err: any) {
       console.error('Error moving pack to next stage:', err);
       alert('خطا در انتقال به مرحله بعدی: ' + (err.response?.data?.message || err.message));
@@ -114,7 +111,21 @@ const Packs = () => {
     try {
       console.log('Saving passenger with data:', passenger);
       if (editModal.packId) {
-        const response = await axios.post('/passengers', { ...passenger, packId: editModal.packId, travelType: packs.find(p => p.id === editModal.packId)?.type });
+        const passengerDataToSend = {
+          firstName: passenger.firstName,
+          lastName: passenger.lastName,
+          nationalCode: passenger.nationalCode,
+          phone: passenger.phone,
+          travelDate: passenger.travelDate,
+          returnDate: passenger.returnDate,
+          birthDate: passenger.birthDate,
+          leaderName: passenger.leaderName,
+          leaderPhone: passenger.leaderPhone,
+          gender: passenger.gender,
+          packId: editModal.packId,
+          travelType: packs.find(p => p.id === editModal.packId)?.type,
+        };
+        const response = await axios.post('/passengers', passengerDataToSend);
         console.log('Server response for adding passenger:', response.data);
         setPacks((prevPacks) =>
           prevPacks.map((pack) =>
@@ -124,7 +135,19 @@ const Packs = () => {
           )
         );
       } else {
-        await axios.put(`/passengers/${passenger.id}`, passenger);
+        const passengerDataToSend = {
+          firstName: passenger.firstName,
+          lastName: passenger.lastName,
+          nationalCode: passenger.nationalCode,
+          phone: passenger.phone,
+          travelDate: passenger.travelDate,
+          returnDate: passenger.returnDate,
+          birthDate: passenger.birthDate,
+          leaderName: passenger.leaderName,
+          leaderPhone: passenger.leaderPhone,
+          gender: passenger.gender,
+        };
+        await axios.put(`/passengers/${passenger.id}`, passengerDataToSend);
         setPacks((prevPacks) =>
           prevPacks.map((pack) => ({
             ...pack,
@@ -150,7 +173,6 @@ const Packs = () => {
       phone: '',
       travelDate: packs.find((p) => p.id === packId)?.travelDate || '',
       gender: '',
-      leaderLastName: '',
     };
     setEditModal({ show: true, passenger: newPassenger, packId });
   };
@@ -167,7 +189,6 @@ const Packs = () => {
       returnDate: '1404-04-01',
       birthDate: '1404-01-01',
       leaderName: undefined,
-      leaderLastName: 'TestLeader',
       leaderPhone: undefined,
       gender: 'نامشخص',
       packId,
@@ -224,17 +245,15 @@ const Packs = () => {
       <div className="flex justify-center gap-4 mb-6">
         <button
           onClick={() => setSelectedType('normal')}
-          className={`px-4 py-2 rounded-lg ${
-            selectedType === 'normal' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'
-          } hover:bg-purple-700 hover:text-white transition duration-300`}
+          className={`px-4 py-2 rounded-lg ${selectedType === 'normal' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'
+            } hover:bg-purple-700 hover:text-white transition duration-300`}
         >
           پک‌های عادی
         </button>
         <button
           onClick={() => setSelectedType('vip')}
-          className={`px-4 py-2 rounded-lg ${
-            selectedType === 'vip' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'
-          } hover:bg-purple-700 hover:text-white transition duration-300`}
+          className={`px-4 py-2 rounded-lg ${selectedType === 'vip' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'
+            } hover:bg-purple-700 hover:text-white transition duration-300`}
         >
           پک‌های VIP
         </button>
@@ -277,7 +296,6 @@ const Packs = () => {
                               <th className="p-3 border border-gray-300">تاریخ برگشت</th>
                               <th className="p-3 border border-gray-300">تاریخ تولد</th>
                               <th className="p-3 border border-gray-300">نام سرپرست</th>
-                              <th className="p-3 border border-gray-300">نام خانوادگی سرپرست</th>
                               <th className="p-3 border border-gray-300">موبایل سرپرست</th>
                               <th className="p-3 border border-gray-300">جنسیت</th>
                               <th className="p-3 border border-gray-300">عملیات</th>
@@ -299,7 +317,6 @@ const Packs = () => {
                                   {formatDate(passenger.birthDate)}
                                 </td>
                                 <td className="p-3 border border-gray-300">{passenger.leaderName || '-'}</td>
-                                <td className="p-3 border border-gray-300">{passenger.leaderLastName || '-'}</td>
                                 <td className="p-3 border border-gray-300">{passenger.leaderPhone || '-'}</td>
                                 <td className="p-3 border border-gray-300">
                                   {passenger.gender === 'unknown' ? 'نامشخص' : passenger.gender}

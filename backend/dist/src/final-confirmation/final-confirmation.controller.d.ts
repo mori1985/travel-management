@@ -22,11 +22,13 @@ export declare class FinalConfirmationController {
         }[];
         busAssignment: {
             id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
             packId: number;
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
+            company: string | null;
+            plate: string | null;
+            driver: string | null;
+            driverPhone: string | null;
         } | null;
     } & {
         id: number;
@@ -36,6 +38,7 @@ export declare class FinalConfirmationController {
         repository: number;
         status: import(".prisma/client").$Enums.PackStatus;
         busAssignmentId: number | null;
+        finalConfirmationId: number | null;
     })[]>;
     revertToPreviousStage(packId: number): Promise<{
         message: string;
@@ -59,11 +62,13 @@ export declare class FinalConfirmationController {
             }[];
             busAssignment: {
                 id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
                 packId: number;
-                company: string;
-                plate: string;
-                driver: string;
-                driverPhone: string;
+                company: string | null;
+                plate: string | null;
+                driver: string | null;
+                driverPhone: string | null;
             } | null;
         } & {
             id: number;
@@ -73,6 +78,7 @@ export declare class FinalConfirmationController {
             repository: number;
             status: import(".prisma/client").$Enums.PackStatus;
             busAssignmentId: number | null;
+            finalConfirmationId: number | null;
         };
     }>;
 }

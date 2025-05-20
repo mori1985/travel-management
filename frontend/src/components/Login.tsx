@@ -40,7 +40,7 @@ const Login = () => {
     e.preventDefault();
     console.log('Sending login request:', { username, password });
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', {
+      const response = await axios.post('http://localhost:3001/auth/login', {
         username,
         password,
       }, {

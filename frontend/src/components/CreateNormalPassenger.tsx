@@ -307,20 +307,7 @@ const CreateNormalPassenger = () => {
             />
             {errors.guardianFirstName && <p className="text-red-500 text-sm mt-1 text-right">{errors.guardianFirstName}</p>}
           </div>
-          <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianLastName">
-              نام خانوادگی سرپرست
-            </label>
-            <input
-              type="text"
-              id="guardianLastName"
-              name="guardianLastName"
-              value={formData.guardianLastName}
-              onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
-            />
-            {errors.guardianLastName && <p className="text-red-500 text-sm mt-1 text-right">{errors.guardianLastName}</p>}
-          </div>
+         
           <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianMobile">
               موبایل سرپرست

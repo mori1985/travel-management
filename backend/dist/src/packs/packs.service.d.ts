@@ -23,11 +23,13 @@ export declare class PacksService {
         }[];
         busAssignment: {
             id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
             packId: number;
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
+            company: string | null;
+            plate: string | null;
+            driver: string | null;
+            driverPhone: string | null;
         } | null;
     } & {
         id: number;
@@ -37,6 +39,7 @@ export declare class PacksService {
         repository: number;
         status: import(".prisma/client").$Enums.PackStatus;
         busAssignmentId: number | null;
+        finalConfirmationId: number | null;
     })[]>;
     assignPassengerToPack(passengerData: any, req: ExpressRequest): Promise<{
         id: number;
@@ -72,7 +75,7 @@ export declare class PacksService {
         leaderPhone: string | null;
         createdById: number;
     }>;
-    nextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed'): Promise<{
+    nextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed', packData?: any): Promise<{
         message: string;
         updatedPack: {
             passengers: {
@@ -94,11 +97,13 @@ export declare class PacksService {
             }[];
             busAssignment: {
                 id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
                 packId: number;
-                company: string;
-                plate: string;
-                driver: string;
-                driverPhone: string;
+                company: string | null;
+                plate: string | null;
+                driver: string | null;
+                driverPhone: string | null;
             } | null;
         } & {
             id: number;
@@ -108,6 +113,7 @@ export declare class PacksService {
             repository: number;
             status: import(".prisma/client").$Enums.PackStatus;
             busAssignmentId: number | null;
+            finalConfirmationId: number | null;
         };
     }>;
 }

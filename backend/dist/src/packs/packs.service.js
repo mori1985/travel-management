@@ -92,7 +92,6 @@ let PacksService = class PacksService {
             returnDate: passengerData.returnDate,
             birthDate: passengerData.birthDate,
             leaderName: passengerData.leaderName,
-            leaderLastName: passengerData.leaderLastName,
             leaderPhone: passengerData.leaderPhone,
             gender: passengerData.gender,
             packId: pack.id,
@@ -115,7 +114,9 @@ let PacksService = class PacksService {
         if (passengerCount >= (pack.type === 'vip' ? 25 : 40)) {
             throw new Error('ظرفیت پک پر شده است');
         }
-        const parsedTravelDate = new Date(passengerData.travelDate).toISOString().split('T')[0];
+        const parsedTravelDate = new Date(passengerData.travelDate)
+            .toISOString()
+            .split('T')[0];
         const passengerDataToCreate = {
             firstName: passengerData.firstName,
             lastName: passengerData.lastName,
@@ -126,7 +127,6 @@ let PacksService = class PacksService {
             birthDate: passengerData.birthDate || null,
             travelType: pack.type,
             leaderName: passengerData.leaderName || null,
-            leaderLastName: passengerData.leaderLastName || null,
             leaderPhone: passengerData.leaderPhone || null,
             gender: passengerData.gender || 'unknown',
             packId: pack.id,
@@ -137,11 +137,11 @@ let PacksService = class PacksService {
         });
         return newPassenger;
     }
-    async nextStage(packId, status) {
+    async nextStage(packId, status, packData) {
         return this.prisma.$transaction(async (prisma) => {
             const pack = await prisma.pack.findUnique({
                 where: { id: packId },
-                include: { busAssignment: true },
+                include: { passengers: true, busAssignment: true },
             });
             if (!pack) {
                 throw new Error('پک یافت نشد');
@@ -149,6 +149,20 @@ let PacksService = class PacksService {
             if (status === 'pending' && pack.busAssignment) {
                 await prisma.busAssignment.delete({
                     where: { packId: packId },
+                });
+            }
+            if (status === 'assigned' && !pack.busAssignment) {
+                await prisma.busAssignment.create({
+                    data: {
+                        company: null,
+                        plate: null,
+                        driver: null,
+                        driverPhone: null,
+                        packId: packId,
+                        passengers: { connect: pack.passengers.map((p) => ({ id: p.id })) },
+                        travelDate: pack.travelDate,
+                        type: pack.type,
+                    },
                 });
             }
             const updatedPack = await prisma.pack.update({
@@ -162,9 +176,6 @@ let PacksService = class PacksService {
                     status: status,
                 },
             });
-            if (status === 'pending') {
-                return { message: 'پک با موفقیت به مرحله قبل بازگشت', updatedPack };
-            }
             return { message: 'پک با موفقیت به مرحله بعدی منتقل شد', updatedPack };
         });
     }

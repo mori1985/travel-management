@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://localhost:3001', // تغییر به پورت 3001
   headers: {
     'Content-Type': 'application/json',
   },

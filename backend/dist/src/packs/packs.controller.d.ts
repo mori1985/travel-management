@@ -23,11 +23,13 @@ export declare class PacksController {
         }[];
         busAssignment: {
             id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
             packId: number;
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
+            company: string | null;
+            plate: string | null;
+            driver: string | null;
+            driverPhone: string | null;
         } | null;
     } & {
         id: number;
@@ -37,6 +39,7 @@ export declare class PacksController {
         repository: number;
         status: import(".prisma/client").$Enums.PackStatus;
         busAssignmentId: number | null;
+        finalConfirmationId: number | null;
     })[]>;
     nextStage(id: number, status: 'pending' | 'assigned' | 'confirmed'): Promise<{
         message: string;
@@ -60,11 +63,13 @@ export declare class PacksController {
             }[];
             busAssignment: {
                 id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
                 packId: number;
-                company: string;
-                plate: string;
-                driver: string;
-                driverPhone: string;
+                company: string | null;
+                plate: string | null;
+                driver: string | null;
+                driverPhone: string | null;
             } | null;
         } & {
             id: number;
@@ -74,6 +79,7 @@ export declare class PacksController {
             repository: number;
             status: import(".prisma/client").$Enums.PackStatus;
             busAssignmentId: number | null;
+            finalConfirmationId: number | null;
         };
     }>;
     assignPassengerToPack(passengerData: any, req: ExpressRequest): Promise<{

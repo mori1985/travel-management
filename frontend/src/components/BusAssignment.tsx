@@ -54,14 +54,15 @@ const BusAssignment = () => {
 
   const fetchPacks = async () => {
     try {
-      const response = await axios.get('/packs/bus-assignment');
+      const response = await axios.get('/bus-assignment/packs/bus-assignment');
+      console.log('Fetched packs from /bus-assignment/packs/bus-assignment:', response.data);
       setPacks(response.data);
       const newFormData = response.data.reduce((acc: { [packId: number]: BusAssignment }, pack: Pack) => {
         acc[pack.id] = {
-          companyName: '',
-          licensePlate: '',
-          driverName: '',
-          driverPhone: '',
+          companyName: pack.busAssignment?.companyName || '',
+          licensePlate: pack.busAssignment?.licensePlate || '',
+          driverName: pack.busAssignment?.driverName || '',
+          driverPhone: pack.busAssignment?.driverPhone || '',
         };
         return acc;
       }, {});
@@ -73,25 +74,7 @@ const BusAssignment = () => {
 
   useEffect(() => {
     fetchPacks();
-    const initialPack = location.state?.pack;
-    if (initialPack) {
-      setPacks((prevPacks) => {
-        if (prevPacks.some((p) => p.id === initialPack.id)) {
-          return prevPacks;
-        }
-        return [...prevPacks, initialPack];
-      });
-      setFormData((prev) => ({
-        ...prev,
-        [initialPack.id]: {
-          companyName: '',
-          licensePlate: '',
-          driverName: '',
-          driverPhone: '',
-        },
-      }));
-    }
-  }, [location.state]);
+  }, []);
 
   const togglePack = (packId: number) => {
     setExpandedPack(expandedPack === packId ? null : packId);
@@ -183,7 +166,7 @@ const BusAssignment = () => {
     setShowNextStageConfirm(packId);
   };
 
-  const confirmNextStage = async (packId: number) => {
+  const handleNextStage = async (packId: number) => {
     try {
       const assignmentData = formData[packId];
       const pack = packs.find((p) => p.id === packId);
@@ -366,7 +349,7 @@ const BusAssignment = () => {
                       )}
                     </>
                   )}
-                  {!pack.busAssignment && (
+                  {!pack.busAssignment?.companyName && (
                     <div className="mt-6 p-6 bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-2xl border border-purple-200">
                       <h3 className="text-xl font-semibold text-purple-700 mb-4 text-center">فرم تخصیص اتوبوس</h3>
                       <div className="grid grid-cols-2 gap-6">
@@ -505,7 +488,7 @@ const BusAssignment = () => {
             <h3 className="text-lg font-semibold text-center mb-4">آیا مطمئن هستید که می‌خواهید به مرحله بعدی بروید؟</h3>
             <div className="flex justify-center gap-4">
               <button
-                onClick={() => confirmNextStage(showNextStageConfirm)}
+                onClick={() => handleNextStage(showNextStageConfirm)}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
               >
                 بله

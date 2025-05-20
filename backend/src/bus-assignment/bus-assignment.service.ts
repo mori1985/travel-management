@@ -17,31 +17,46 @@ export class BusAssignmentService {
   async assignBus(packId: number, busAssignmentData: CreateBusAssignmentDto) {
     const pack = await this.prisma.pack.findUnique({
       where: { id: packId },
-      include: { busAssignment: true },
+      include: { busAssignment: true, passengers: true },
     });
 
     if (!pack) {
       throw new Error('پک یافت نشد');
     }
 
-    if (pack.busAssignment) {
-      throw new Error('این پک قبلاً تخصیص اتوبوس شده است');
+    if (!pack.busAssignment) {
+      throw new Error('تخصیص اتوبوس برای این پک هنوز ثبت نشده است');
     }
 
     return this.prisma.$transaction(async (prisma) => {
-      const busAssignment = await prisma.busAssignment.create({
+      const updatedBusAssignment = await prisma.busAssignment.update({
+        where: { packId: packId },
         data: {
           company: busAssignmentData.company,
           plate: busAssignmentData.plate,
           driver: busAssignmentData.driver,
           driverPhone: busAssignmentData.driverPhone,
-          packId: packId,
         },
+        include: { pack: { include: { passengers: true } } },
       });
 
       await prisma.pack.update({
         where: { id: packId },
         data: { status: 'confirmed' },
+      });
+
+      await prisma.finalConfirmation.create({
+        data: {
+          packId: packId,
+          busAssignmentId: updatedBusAssignment.id,
+          travelDate: pack.travelDate,
+          type: pack.type,
+          company: busAssignmentData.company,
+          plate: busAssignmentData.plate,
+          driver: busAssignmentData.driver,
+          driverPhone: busAssignmentData.driverPhone,
+          confirmationDate: new Date(),
+        },
       });
 
       await prisma.packHistory.create({
@@ -51,7 +66,10 @@ export class BusAssignmentService {
         },
       });
 
-      return { message: 'تخصیص اتوبوس با موفقیت انجام شد', busAssignment };
+      return {
+        message: 'تخصیص اتوبوس با موفقیت انجام شد',
+        busAssignment: updatedBusAssignment,
+      };
     });
   }
 }

@@ -12,7 +12,7 @@ async function bootstrap() {
         allowedHeaders: 'Content-Type, Authorization',
         credentials: true,
     });
-    await app.listen(3000);
+    await app.listen(3001);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map
