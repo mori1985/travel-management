@@ -155,25 +155,45 @@ export class PacksService {
         throw new Error('پک یافت نشد');
       }
 
-      if (status === 'pending' && pack.busAssignment) {
-        await prisma.busAssignment.delete({
+      if (status === 'pending') {
+        const existingAssignment = await prisma.busAssignment.findUnique({
           where: { packId: packId },
         });
+        if (existingAssignment) {
+          await prisma.busAssignment.delete({
+            where: { packId: packId },
+          });
+        }
       }
 
-      if (status === 'assigned' && !pack.busAssignment) {
-        await prisma.busAssignment.create({
-          data: {
-            company: null,
-            plate: null,
-            driver: null,
-            driverPhone: null,
-            packId: packId,
-            passengers: { connect: pack.passengers.map((p) => ({ id: p.id })) },
-            travelDate: pack.travelDate,
-            type: pack.type,
-          },
+      if (status === 'assigned') {
+        const existingAssignment = await prisma.busAssignment.findUnique({
+          where: { packId: packId },
         });
+
+        if (!existingAssignment) {
+          await prisma.busAssignment.create({
+            data: {
+              company: null,
+              plate: null,
+              driver: null,
+              driverPhone: null,
+              packId: packId,
+              passengers: { connect: pack.passengers.map((p) => ({ id: p.id })) },
+              travelDate: pack.travelDate,
+              type: pack.type,
+            },
+          });
+        } else {
+          await prisma.busAssignment.update({
+            where: { packId: packId },
+            data: {
+              passengers: { connect: pack.passengers.map((p) => ({ id: p.id })) },
+              travelDate: pack.travelDate,
+              type: pack.type,
+            },
+          });
+        }
       }
 
       const updatedPack = await prisma.pack.update({

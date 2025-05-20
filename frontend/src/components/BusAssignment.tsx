@@ -41,6 +41,7 @@ const BusAssignment = () => {
   const [showReturnConfirm, setShowReturnConfirm] = useState<number | null>(null);
   const [showNextStageConfirm, setShowNextStageConfirm] = useState<number | null>(null);
   const [errors, setErrors] = useState<{ [packId: number]: { [key: string]: string } }>({});
+  const [selectedType, setSelectedType] = useState<'normal' | 'vip' | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const companies = ['شرکت سیروسفر', 'شرکت همسفر', 'شرکت ایران‌پیما', 'شرکت رویال سفر'];
@@ -208,12 +209,16 @@ const BusAssignment = () => {
   const formatDate = (date: string | undefined) => {
     if (!date) return '-';
     const cleanDate = date.split('T')[0];
-    return moment(cleanDate, 'YYYY-MM-DD').locale('fa').format('jD MMMM jYYYY');
+    console.log('Raw date in BusAssignment:', cleanDate); // برای دیباگ
+    const formatted = moment(cleanDate, 'jYYYY-jMM-jDD').locale('fa').format('jD MMMM jYYYY');
+    return formatted;
   };
 
   const isPackFull = (pack: Pack) => {
     return pack.passengers.length >= (pack.type === 'vip' ? 25 : 40);
   };
+
+  const filteredPacks = selectedType ? packs.filter((pack) => pack.type === selectedType) : packs;
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-100 to-purple-200 p-6">
@@ -221,16 +226,25 @@ const BusAssignment = () => {
       <div className="flex justify-center gap-4 mb-6">
         <button
           onClick={() => navigate('/packs')}
-          className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-300"
+          className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-1"
         >
-          بازگشت به صفحه اصلی
+          بازگشت به صفحه پک‌های مسافرتی
         </button>
+        <select
+          value={selectedType || ''}
+          onChange={(e) => setSelectedType(e.target.value as 'normal' | 'vip' | null)}
+          className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-right"
+        >
+          <option value="">همه پک‌ها</option>
+          <option value="normal">پک‌های عادی</option>
+          <option value="vip">پک‌های VIP</option>
+        </select>
       </div>
-      {packs.length === 0 ? (
+      {filteredPacks.length === 0 ? (
         <p className="text-center text-gray-600">هیچ پکی برای تخصیص موجود نیست</p>
       ) : (
         <div className="space-y-6">
-          {packs.map((pack) => (
+          {filteredPacks.map((pack) => (
             <div key={pack.id} className="bg-white rounded-lg shadow-lg p-6">
               <div
                 className="flex justify-between items-center cursor-pointer"
