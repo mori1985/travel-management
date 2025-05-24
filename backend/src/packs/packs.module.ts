@@ -6,5 +6,6 @@ import { PrismaService } from '../prisma.service';
 @Module({
   controllers: [PacksController],
   providers: [PacksService, PrismaService],
+  exports: [PacksService], // اضافه کردن PacksService به exports
 })
 export class PacksModule {}

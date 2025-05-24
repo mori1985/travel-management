@@ -19,9 +19,9 @@ interface Passenger {
 }
 
 interface BusAssignment {
-  companyName: string;
-  licensePlate: string;
-  driverName: string;
+  company: string;
+  plate: string;
+  driver: string;
   driverPhone: string;
 }
 
@@ -58,24 +58,24 @@ const BusAssignment = () => {
       const response = await axios.get('/bus-assignment/packs/bus-assignment');
       console.log('Fetched packs from /bus-assignment/packs/bus-assignment:', response.data);
       setPacks(response.data);
-      const newFormData = response.data.reduce((acc: { [packId: number]: BusAssignment }, pack: Pack) => {
-        acc[pack.id] = {
-          companyName: pack.busAssignment?.companyName || '',
-          licensePlate: pack.busAssignment?.licensePlate || '',
-          driverName: pack.busAssignment?.driverName || '',
-          driverPhone: pack.busAssignment?.driverPhone || '',
-        };
-        return acc;
-      }, {});
-      setFormData(newFormData);
+      const initialFormData: { [packId: number]: BusAssignment } = {};
+      response.data.forEach((pack: Pack) => {
+        if (pack.busAssignment) {
+          initialFormData[pack.id] = { ...pack.busAssignment };
+        }
+      });
+      setFormData(initialFormData);
+      return response.data;
     } catch (err: any) {
       console.error('Error fetching packs:', err);
+      alert('خطا در بارگذاری پک‌ها: ' + (err.response?.data?.message || err.message || 'خطایی رخ داده است'));
+      return null;
     }
   };
 
   useEffect(() => {
     fetchPacks();
-  }, []);
+  }, [location.state]);
 
   const togglePack = (packId: number) => {
     setExpandedPack(expandedPack === packId ? null : packId);
@@ -85,7 +85,7 @@ const BusAssignment = () => {
     setFormData((prev) => ({
       ...prev,
       [packId]: {
-        ...prev[packId]!,
+        ...prev[packId] || { company: '', plate: '', driver: '', driverPhone: '' },
         [field]: value,
       },
     }));
@@ -97,19 +97,18 @@ const BusAssignment = () => {
       },
     }));
   };
-
   const handlePlateChange = (
     packId: number,
     part: 'first' | 'letter' | 'second',
     value: string
   ) => {
     const currentData = formData[packId] || {
-      companyName: '',
-      licensePlate: '',
-      driverName: '',
+      company: '',
+      plate: '',
+      driver: '',
       driverPhone: '',
     };
-    const parts = currentData.licensePlate ? currentData.licensePlate.split('-') : ['', 'ع', ''];
+    const parts = currentData.plate ? currentData.plate.split('-') : ['', 'ع', ''];
 
     if (part === 'first') {
       parts[0] = value;
@@ -120,18 +119,18 @@ const BusAssignment = () => {
     }
 
     const newLicensePlate = parts.filter(Boolean).join('-');
-    handleFormChange(packId, 'licensePlate', newLicensePlate);
+    handleFormChange(packId, 'plate', newLicensePlate);
   };
 
   const validateForm = (packId: number) => {
     const assignmentData = formData[packId];
     const newErrors: { [key: string]: string } = {};
 
-    if (!assignmentData?.companyName) {
-      newErrors.companyName = 'نام شرکت الزامی است';
+    if (!assignmentData?.company) {
+      newErrors.company = 'نام شرکت الزامی است';
     }
 
-    const plateParts = assignmentData?.licensePlate ? assignmentData.licensePlate.split('-') : [];
+    const plateParts = assignmentData?.plate ? assignmentData.plate.split('-') : [];
     if (
       !plateParts[0] ||
       !/^\d{3}$/.test(plateParts[0]) ||
@@ -140,11 +139,11 @@ const BusAssignment = () => {
       !plateParts[2] ||
       !/^\d{2}$/.test(plateParts[2])
     ) {
-      newErrors.licensePlate = 'فرمت پلاک باید مثل ۱۲۳-ع-۴۵ باشد';
+      newErrors.plate = 'فرمت پلاک باید مثل ۱۲۳-ع-۴۵ باشد';
     }
 
-    if (!assignmentData?.driverName) {
-      newErrors.driverName = 'نام راننده الزامی است';
+    if (!assignmentData?.driver) {
+      newErrors.driver = 'نام راننده الزامی است';
     }
 
     if (!assignmentData?.driverPhone || !/^09\d{9}$/.test(assignmentData.driverPhone)) {
@@ -159,35 +158,70 @@ const BusAssignment = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const saveBusAssignment = async (packId: number) => {
+    const assignmentData = formData[packId];
+    // تابع validateForm خودش خطاها رو مدیریت می‌کنه، پس شرط اضافی لازم نیست
+    try {
+      console.log('Sending assignment data to /bus-assignment/:packId:', assignmentData);
+      const response = await axios.post(`/packs/bus-assignment/${packId}`, { // اصلاح مسیر endpoint
+        company: assignmentData.company,
+        plate: assignmentData.plate,
+        driver: assignmentData.driver,
+        driverPhone: assignmentData.driverPhone,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log('Bus assignment saved response:', response.data);
+      return response.data;
+    } catch (err: any) {
+      console.error('Error saving bus assignment:', err.response?.data || err.message);
+      throw new Error(err.response?.data?.message || err.message || 'خطا در ثبت اطلاعات اتوبوس');
+    }
+  };
+
   const handleSubmit = async (packId: number) => {
     const isValid = validateForm(packId);
     if (!isValid) {
-      return;
+      console.log('Form validation failed:', errors[packId]);
+      return; // اگر فرم معتبر نباشه، ادامه نده
     }
-    setShowNextStageConfirm(packId);
+    try {
+      const response = await saveBusAssignment(packId);
+      console.log('Saved bus assignment:', response);
+      const updatedPacks = await fetchPacks();
+      console.log('Updated packs after save:', updatedPacks);
+      if (updatedPacks) {
+        setShowNextStageConfirm(packId);
+      } else {
+        throw new Error('دریافت پک‌ها با مشکل مواجه شد');
+      }
+    } catch (err: any) {
+      console.error('Error during submission:', err);
+      alert('خطا در ثبت اطلاعات اتوبوس: ' + (err.message || 'خطایی رخ داده است'));
+    }
   };
-
   const handleNextStage = async (packId: number) => {
     try {
-      const assignmentData = formData[packId];
       const pack = packs.find((p) => p.id === packId);
       if (!pack) {
         throw new Error('پک یافت نشد');
       }
 
-      const response = await axios.post(`/bus-assignment/${packId}`, {
-        company: assignmentData.companyName,
-        plate: assignmentData.licensePlate,
-        driver: assignmentData.driverName,
-        driverPhone: assignmentData.driverPhone,
+      const response = await axios.post(`/bus-assignment/${packId}/move-to-next-stage`, { status: 'confirmed' }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
       });
-      console.log('Bus assignment response:', response.data);
-
+      console.log('Moved to next stage response:', response.data);
       await fetchPacks();
-      navigate('/final-confirmation', { state: { pack: { ...pack, busAssignment: assignmentData } } });
+      navigate('/final-confirmation', { state: { pack: response.data } }); // فرض می‌کنم پاسخ شامل خود پک به‌روز‌شده است
     } catch (err: any) {
-      console.error('Error saving bus assignment:', err);
-      alert('خطا در ارسال به مرحله بعدی: ' + (err.response?.data?.message || err.message));
+      console.error('Error moving to next stage:', err);
+      alert('خطا در ارسال به مرحله بعدی: ' + (err.response?.data?.message || err.message || 'خطایی رخ داده است'));
     } finally {
       setShowNextStageConfirm(null);
     }
@@ -195,21 +229,27 @@ const BusAssignment = () => {
 
   const handlePreviousStage = async (packId: number) => {
     try {
-      const response = await axios.post(`/packs/next-stage/${packId}`, { status: 'pending' });
-      console.log('Previous stage response:', response.data);
+      const response = await axios.post(`/bus-assignment/${packId}/previous-stage`, {}, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log('Moved to previous stage:', response.data);
       await fetchPacks();
       setShowReturnConfirm(null);
       navigate('/packs');
     } catch (err: any) {
-      console.error('Error moving pack to previous stage:', err);
-      alert('خطا در بازگشت به مرحله قبل: ' + (err.response?.data?.message || err.message));
+      console.error('Error moving to previous stage:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'خطایی رخ داده است';
+      alert(`خطا در بازگشت به مرحله قبل: ${errorMessage}`);
     }
   };
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '-';
     const cleanDate = date.split('T')[0];
-    console.log('Raw date in BusAssignment:', cleanDate); // برای دیباگ
+    console.log('Raw date in BusAssignment:', cleanDate);
     const formatted = moment(cleanDate, 'jYYYY-jMM-jDD').locale('fa').format('jD MMMM jYYYY');
     return formatted;
   };
@@ -308,164 +348,111 @@ const BusAssignment = () => {
                         </table>
                       </div>
 
-                      {pack.busAssignment && (
-                        <div className="mt-4">
-                          <h3 className="text-lg font-semibold text-purple-600 mb-2">اطلاعات اتوبوس</h3>
-                          <div className="overflow-x-auto">
-                            <table className="w-full border-collapse text-right">
-                              <thead>
-                                <tr className="bg-purple-600 text-white">
-                                  <th className="p-3 border border-gray-300">شرکت</th>
-                                  <th className="p-3 border border-gray-300">پلاک</th>
-                                  <th className="p-3 border border-gray-300">راننده</th>
-                                  <th className="p-3 border border-gray-300">موبایل راننده</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr className="bg-yellow-100">
-                                  <td className="p-3 border border-gray-300">{pack.busAssignment.companyName}</td>
-                                  <td className="p-3 border border-gray-300">{pack.busAssignment.licensePlate}</td>
-                                  <td className="p-3 border border-gray-300">{pack.busAssignment.driverName}</td>
-                                  <td className="p-3 border border-gray-300">{pack.busAssignment.driverPhone}</td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-
-                      {pack.busAssignment && (
-                        <div className="mt-4">
-                          <h3 className="text-lg font-semibold text-purple-600 mb-2">اطلاعات تأیید</h3>
-                          <div className="overflow-x-auto">
-                            <table className="w-full border-collapse text-right">
-                              <thead>
-                                <tr className="bg-purple-600 text-white">
-                                  <th className="p-3 border border-gray-300">نام دستگاه</th>
-                                  <th className="p-3 border border-gray-300">نام و نام خانوادگی مسئول</th>
-                                  <th className="p-3 border border-gray-300">محل امضا</th>
-                                  <th className="p-3 border border-gray-300">توضیحات</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {[...Array(4)].map((_, index) => (
-                                  <tr key={index} className="hover:bg-gray-100">
-                                    <td className="p-3 border border-gray-300">-</td>
-                                    <td className="p-3 border border-gray-300">-</td>
-                                    <td className="p-3 border border-gray-300">-</td>
-                                    <td className="p-3 border border-gray-300">-</td>
-                                  </tr>
+                      {pack.status === 'assigned' && (
+                        <div className="mt-6 p-6 bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-2xl border border-purple-200">
+                          <h3 className="text-xl font-semibold text-purple-700 mb-4 text-center">فرم تخصیص اتوبوس</h3>
+                          <div className="grid grid-cols-2 gap-6">
+                            <div>
+                              <label className="block text-gray-700 mb-2 text-right">شرکت مسافربری</label>
+                              <select
+                                value={formData[pack.id]?.company || pack.busAssignment?.company || ''}
+                                onChange={(e) => handleFormChange(pack.id, 'company', e.target.value)}
+                                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
+                              >
+                                <option value="">انتخاب شرکت</option>
+                                {companies.map((company) => (
+                                  <option key={company} value={company}>{company}</option>
                                 ))}
-                              </tbody>
-                            </table>
+                              </select>
+                              {errors[pack.id]?.company && (
+                                <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].company}</p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 mb-2 text-right">پلاک اتوبوس</label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={formData[pack.id]?.plate?.split('-')[0] || pack.busAssignment?.plate?.split('-')[0] || ''}
+                                  onChange={(e) => handlePlateChange(pack.id, 'first', e.target.value)}
+                                  className="w-1/3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
+                                  placeholder="۱۲۳"
+                                  maxLength={3}
+                                  onInput={(e) => {
+                                    e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
+                                  }}
+                                />
+                                <select
+                                  value={formData[pack.id]?.plate?.split('-')[1] || pack.busAssignment?.plate?.split('-')[1] || 'ع'}
+                                  onChange={(e) => handlePlateChange(pack.id, 'letter', e.target.value)}
+                                  className="w-1/6 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
+                                >
+                                  <option value="ع">ع</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  value={formData[pack.id]?.plate?.split('-')[2] || pack.busAssignment?.plate?.split('-')[2] || ''}
+                                  onChange={(e) => handlePlateChange(pack.id, 'second', e.target.value)}
+                                  className="w-1/3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
+                                  placeholder="۴۵"
+                                  maxLength={2}
+                                  onInput={(e) => {
+                                    e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
+                                  }}
+                                />
+                              </div>
+                              {errors[pack.id]?.plate && (
+                                <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].plate}</p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 mb-2 text-right">نام راننده</label>
+                              <input
+                                type="text"
+                                value={formData[pack.id]?.driver || pack.busAssignment?.driver || ''}
+                                onChange={(e) => handleFormChange(pack.id, 'driver', e.target.value)}
+                                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
+                                placeholder="نام راننده"
+                              />
+                              {errors[pack.id]?.driver && (
+                                <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].driver}</p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 mb-2 text-right">شماره موبایل راننده</label>
+                              <input
+                                type="text"
+                                value={formData[pack.id]?.driverPhone || pack.busAssignment?.driverPhone || ''}
+                                onChange={(e) => handleFormChange(pack.id, 'driverPhone', e.target.value)}
+                                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
+                                placeholder="مثال: 09123456789"
+                                maxLength={11}
+                                onInput={(e) => {
+                                  e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
+                                }}
+                              />
+                              {errors[pack.id]?.driverPhone && (
+                                <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].driverPhone}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-6 flex justify-end gap-4">
+                            <button
+                              onClick={() => setShowReturnConfirm(pack.id)}
+                              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition duration-300 font-semibold"
+                            >
+                              برگشت به مرحله قبل
+                            </button>
+                            <button
+                              onClick={() => handleSubmit(pack.id)}
+                              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-300 font-semibold"
+                            >
+                              ارسال به مرحله بعدی
+                            </button>
                           </div>
                         </div>
                       )}
                     </>
-                  )}
-                  {!pack.busAssignment?.companyName && (
-                    <div className="mt-6 p-6 bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-2xl border border-purple-200">
-                      <h3 className="text-xl font-semibold text-purple-700 mb-4 text-center">فرم تخصیص اتوبوس</h3>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-gray-700 mb-2 text-right">شرکت مسافربری</label>
-                          <select
-                            value={formData[pack.id]?.companyName || ''}
-                            onChange={(e) => handleFormChange(pack.id, 'companyName', e.target.value)}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
-                          >
-                            <option value="">انتخاب شرکت</option>
-                            {companies.map((company) => (
-                              <option key={company} value={company}>{company}</option>
-                            ))}
-                          </select>
-                          {errors[pack.id]?.companyName && (
-                            <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].companyName}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-gray-700 mb-2 text-right">پلاک اتوبوس</label>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={formData[pack.id]?.licensePlate?.split('-')[0] || ''}
-                              onChange={(e) => handlePlateChange(pack.id, 'first', e.target.value)}
-                              className="w-1/3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
-                              placeholder="۱۲۳"
-                              maxLength={3}
-                              onInput={(e) => {
-                                e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
-                              }}
-                            />
-                            <select
-                              value={formData[pack.id]?.licensePlate?.split('-')[1] || 'ع'}
-                              onChange={(e) => handlePlateChange(pack.id, 'letter', e.target.value)}
-                              className="w-1/6 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
-                            >
-                              <option value="ع">ع</option>
-                            </select>
-                            <input
-                              type="text"
-                              value={formData[pack.id]?.licensePlate?.split('-')[2] || ''}
-                              onChange={(e) => handlePlateChange(pack.id, 'second', e.target.value)}
-                              className="w-1/3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
-                              placeholder="۴۵"
-                              maxLength={2}
-                              onInput={(e) => {
-                                e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
-                              }}
-                            />
-                          </div>
-                          {errors[pack.id]?.licensePlate && (
-                            <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].licensePlate}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-gray-700 mb-2 text-right">نام راننده</label>
-                          <input
-                            type="text"
-                            value={formData[pack.id]?.driverName || ''}
-                            onChange={(e) => handleFormChange(pack.id, 'driverName', e.target.value)}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
-                            placeholder="نام راننده"
-                          />
-                          {errors[pack.id]?.driverName && (
-                            <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].driverName}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-gray-700 mb-2 text-right">شماره موبایل راننده</label>
-                          <input
-                            type="text"
-                            value={formData[pack.id]?.driverPhone || ''}
-                            onChange={(e) => handleFormChange(pack.id, 'driverPhone', e.target.value)}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right bg-white"
-                            placeholder="مثال: 09123456789"
-                            maxLength={11}
-                            onInput={(e) => {
-                              e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
-                            }}
-                          />
-                          {errors[pack.id]?.driverPhone && (
-                            <p className="text-red-500 text-sm mt-1 text-right">{errors[pack.id].driverPhone}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mt-6 flex justify-end gap-4">
-                        <button
-                          onClick={() => setShowReturnConfirm(pack.id)}
-                          className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition duration-300 font-semibold"
-                        >
-                          برگشت به مرحله قبل
-                        </button>
-                        <button
-                          onClick={() => handleSubmit(pack.id)}
-                          className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-300 font-semibold"
-                        >
-                          ارسال به مرحله بعدی
-                        </button>
-                      </div>
-                    </div>
                   )}
                 </div>
               )}

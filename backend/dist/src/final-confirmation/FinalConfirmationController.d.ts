@@ -1,8 +1,8 @@
-import { FinalConfirmationService } from './final-confirmation.service';
+import { PacksService } from '../packs/packs.service';
 export declare class FinalConfirmationController {
-    private readonly finalConfirmationService;
-    constructor(finalConfirmationService: FinalConfirmationService);
-    findAllWithPassengers(): Promise<({
+    private readonly packsService;
+    constructor(packsService: PacksService);
+    findAllConfirmedPacks(): Promise<({
         passengers: {
             id: number;
             createdAt: Date;
@@ -41,7 +41,7 @@ export declare class FinalConfirmationController {
         finalConfirmationId: number | null;
         updatedAt: Date;
     })[]>;
-    revertToPreviousStage(packId: number): Promise<{
+    revertToAssigned(packId: number): Promise<{
         message: string;
         updatedPack: {
             passengers: {
@@ -82,5 +82,8 @@ export declare class FinalConfirmationController {
             finalConfirmationId: number | null;
             updatedAt: Date;
         };
+    }>;
+    sendSMS(packId: number): Promise<{
+        message: string;
     }>;
 }

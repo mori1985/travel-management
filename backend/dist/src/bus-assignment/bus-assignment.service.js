@@ -20,25 +20,52 @@ let BusAssignmentService = class BusAssignmentService {
     async findAllWithPassengers() {
         return this.prisma.pack.findMany({
             where: { status: 'assigned' },
-            include: { passengers: true, busAssignment: true },
+            include: {
+                passengers: true,
+                busAssignment: {
+                    select: {
+                        company: true,
+                        plate: true,
+                        driver: true,
+                        driverPhone: true,
+                    },
+                },
+            },
             orderBy: { travelDate: 'asc' },
         });
     }
-    async assignBus(packId, busAssignmentData) {
+    async createBusAssignment(packId, busAssignmentData) {
         const pack = await this.prisma.pack.findUnique({
             where: { id: packId },
-            include: { busAssignment: true, passengers: true },
+            include: { passengers: true },
         });
         if (!pack) {
             throw new Error('پک یافت نشد');
         }
-        if (!pack.busAssignment) {
-            throw new Error('تخصیص اتوبوس برای این پک هنوز ثبت نشده است');
+        const existingAssignment = await this.prisma.busAssignment.findUnique({
+            where: { packId: packId },
+        });
+        if (existingAssignment) {
+            if (pack.busAssignmentId !== existingAssignment.id) {
+                await this.prisma.pack.update({
+                    where: { id: packId },
+                    data: { busAssignmentId: existingAssignment.id },
+                });
+            }
+            return {
+                message: 'تخصیص اتوبوس برای این پک قبلاً ثبت شده است',
+                busAssignment: {
+                    company: existingAssignment.company,
+                    plate: existingAssignment.plate,
+                    driver: existingAssignment.driver,
+                    driverPhone: existingAssignment.driverPhone,
+                },
+            };
         }
         return this.prisma.$transaction(async (prisma) => {
-            const updatedBusAssignment = await prisma.busAssignment.update({
-                where: { packId: packId },
+            const newBusAssignment = await prisma.busAssignment.create({
                 data: {
+                    packId: packId,
                     company: busAssignmentData.company,
                     plate: busAssignmentData.plate,
                     driver: busAssignmentData.driver,
@@ -48,30 +75,16 @@ let BusAssignmentService = class BusAssignmentService {
             });
             await prisma.pack.update({
                 where: { id: packId },
-                data: { status: 'confirmed' },
-            });
-            await prisma.finalConfirmation.create({
-                data: {
-                    packId: packId,
-                    busAssignmentId: updatedBusAssignment.id,
-                    travelDate: pack.travelDate,
-                    type: pack.type,
-                    company: busAssignmentData.company,
-                    plate: busAssignmentData.plate,
-                    driver: busAssignmentData.driver,
-                    driverPhone: busAssignmentData.driverPhone,
-                    confirmationDate: new Date(),
-                },
-            });
-            await prisma.packHistory.create({
-                data: {
-                    packId: packId,
-                    status: 'confirmed',
-                },
+                data: { busAssignmentId: newBusAssignment.id },
             });
             return {
-                message: 'تخصیص اتوبوس با موفقیت انجام شد',
-                busAssignment: updatedBusAssignment,
+                message: 'تخصیص اتوبوس با موفقیت ثبت شد',
+                busAssignment: {
+                    company: newBusAssignment.company,
+                    plate: newBusAssignment.plate,
+                    driver: newBusAssignment.driver,
+                    driverPhone: newBusAssignment.driverPhone,
+                },
             };
         });
     }

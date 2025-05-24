@@ -245,7 +245,7 @@ const EditPassengerModal: React.FC<EditPassengerModalProps> = ({ show, passenger
               placeholder="نام و نام خانوادگی سرپرست (اختیاری)"
             />
           </div>
-         
+
           <div className="mb-4">
             <label className="block text-gray-700 mb-2 text-right">موبایل سرپرست</label>
             <input
@@ -266,9 +266,8 @@ const EditPassengerModal: React.FC<EditPassengerModalProps> = ({ show, passenger
               className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
             >
               <option value="" disabled>جنسیت را انتخاب کنید</option>
-              <option value="مذکر">مذکر</option>
-              <option value="مونث">مونث</option>
-              <option value="نامشخص">نامشخص</option>
+              <option value="مرد">مرد</option>
+              <option value="زن">زن</option>
             </select>
           </div>
           <div className="flex justify-end gap-2 mt-4">

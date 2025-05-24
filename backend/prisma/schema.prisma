@@ -44,25 +44,27 @@ model Pack {
   travelDate      DateTime
   type            PackType        @default(normal)
   repository      Int             @default(1)        // 1, 2, 3
-  status          PackStatus      // موقتاً @default(pending) رو حذف کردیم
+  status          PackStatus      @default(pending)  // اضافه کردن مقدار پیش‌فرض
   passengers      Passenger[]
-  busAssignment   BusAssignment?  @relation(fields: [busAssignmentId], references: [id], onDelete: Cascade)
+  busAssignment   BusAssignment?  @relation(fields: [busAssignmentId], references: [id]) // مشخص کردن رابطه
   busAssignmentId Int?            @unique
-  finalConfirmation FinalConfirmation? @relation
+  finalConfirmation FinalConfirmation? @relation // فقط @relation
   finalConfirmationId Int?        @unique
   history         PackHistory[]
   createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
   smsHistory      SmsHistory[]
 
   @@index([travelDate])
+  @@index([status])
 }
 
 model BusAssignment {
   id           Int         @id @default(autoincrement())
-  company      String?
-  plate        String?
-  driver       String?
-  driverPhone  String?
+  company      String      // ? حذف شده
+  plate        String      // ? حذف شده
+  driver       String      // ? حذف شده
+  driverPhone  String      // ? حذف شده
   packId       Int         @unique
   pack         Pack?       @relation
   travelDate   DateTime    @default(now())
@@ -82,7 +84,7 @@ model FinalConfirmation {
   driver         String
   driverPhone    String
   confirmationDate DateTime    @default(now())
-  pack           Pack          @relation(fields: [packId], references: [id], onDelete: Cascade)
+  pack           Pack          @relation(fields: [packId], references: [id], onDelete: Cascade) // مشخص کردن رابطه
   busAssignment  BusAssignment @relation(fields: [busAssignmentId], references: [id])
 
   @@index([packId])
@@ -105,6 +107,20 @@ model PackHistory {
   status    String
   changedAt DateTime @default(now())
   pack      Pack     @relation(fields: [packId], references: [id], onDelete: Cascade)
+}
+
+model ArchivedPack {
+  id              Int       @id @default(autoincrement())
+  packId          Int       @unique
+  travelDate      DateTime
+  type            PackType
+  repository      Int
+  status          PackStatus
+  passengers      Json      // ذخیره مسافران به صورت JSON
+  busAssignment   Json?     // ذخیره اطلاعات اتوبوس به صورت JSON
+  createdAt       DateTime
+  updatedAt       DateTime
+  archivedAt      DateTime  @default(now())
 }
 
 enum PackType {

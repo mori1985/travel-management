@@ -18,6 +18,7 @@ exports.PacksModule = PacksModule = __decorate([
     (0, common_1.Module)({
         controllers: [packs_controller_1.PacksController],
         providers: [packs_service_1.PacksService, prisma_service_1.PrismaService],
+        exports: [packs_service_1.PacksService],
     })
 ], PacksModule);
 //# sourceMappingURL=packs.module.js.map

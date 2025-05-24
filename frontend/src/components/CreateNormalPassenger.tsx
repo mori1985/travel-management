@@ -123,66 +123,72 @@ const CreateNormalPassenger = () => {
     }
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const newErrors = {
-    firstName: validateField('firstName', formData.firstName),
-    lastName: validateField('lastName', formData.lastName),
-    nationalCode: validateField('nationalCode', formData.nationalCode),
-    mobile: validateField('mobile', formData.mobile),
-    departureDate: validateField('departureDate', formData.departureDate),
-    birthDate: validateField('birthDate', formData.birthDate),
-    gender: validateField('gender', formData.gender),
-    guardianFirstName: validateField('guardianFirstName', formData.guardianFirstName),
-    guardianLastName: validateField('guardianLastName', formData.guardianLastName),
-    guardianMobile: validateField('guardianMobile', formData.guardianMobile),
-    general: '',
+    const newErrors = {
+      firstName: validateField('firstName', formData.firstName),
+      lastName: validateField('lastName', formData.lastName),
+      nationalCode: validateField('nationalCode', formData.nationalCode),
+      mobile: validateField('mobile', formData.mobile),
+      departureDate: validateField('departureDate', formData.departureDate),
+      birthDate: validateField('birthDate', formData.birthDate),
+      gender: validateField('gender', formData.gender),
+      guardianFirstName: validateField('guardianFirstName', formData.guardianFirstName),
+      guardianLastName: validateField('guardianLastName', formData.guardianLastName),
+      guardianMobile: validateField('guardianMobile', formData.guardianMobile),
+      general: '',
+    };
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some((error) => error !== '')) {
+      return;
+    }
+
+    if (!(await validateNationalCode(formData.nationalCode))) return;
+
+    setIsLoading(true);
+    try {
+      console.log('Sending to server:', {
+        travelDate: formData.departureDate,
+        returnDate: formData.returnDate,
+        birthDate: formData.birthDate,
+      }); // لاگ قبل از ارسال
+      const response = await axios.post('/passengers', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        nationalCode: formData.nationalCode,
+        phone: formData.mobile,
+        travelDate: formData.departureDate,
+        returnDate: formData.returnDate || null,
+        birthDate: formData.birthDate,
+        travelType: formData.travelType,
+        leaderName: formData.guardianFirstName,
+        leaderPhone: formData.guardianMobile,
+        gender: formData.gender,
+      });
+      console.log('Response from server:', response.data); // لاگ پاسخ سرور
+      navigate('/packs');
+    } catch (err: any) {
+      setErrors({ ...errors, general: `خطا در ثبت: ${err.response?.data?.message || err.message}` });
+    } finally {
+      setIsLoading(false);
+    }
   };
-  setErrors(newErrors);
-
-  if (Object.values(newErrors).some((error) => error !== '')) {
-    return;
-  }
-
-  if (!(await validateNationalCode(formData.nationalCode))) return;
-
-  setIsLoading(true);
-  try {
-    console.log('Sending to server:', {
-      travelDate: formData.departureDate,
-      returnDate: formData.returnDate,
-      birthDate: formData.birthDate,
-    }); // لاگ قبل از ارسال
-    const response = await axios.post('/passengers', {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      nationalCode: formData.nationalCode,
-      phone: formData.mobile,
-      travelDate: formData.departureDate,
-      returnDate: formData.returnDate || null,
-      birthDate: formData.birthDate,
-      travelType: formData.travelType,
-      leaderName: formData.guardianFirstName,
-      leaderPhone: formData.guardianMobile,
-      gender: formData.gender,
-    });
-    console.log('Response from server:', response.data); // لاگ پاسخ سرور
-    navigate('/packs');
-  } catch (err: any) {
-    setErrors({ ...errors, general: `خطا در ثبت: ${err.response?.data?.message || err.message}` });
-  } finally {
-    setIsLoading(false);
-  }
-};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-100 to-purple-200 p-4">
       <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all hover:scale-105 animate-fade-in">
         <h2 className="text-3xl font-bold mb-6 text-center text-purple-700">ثبت مسافر عادی</h2>
         {errors.general && <p className="text-red-500 mb-4 text-center">{errors.general}</p>}
-        {nationalCodeError && <p className="text-red-500 mb-4 text-center">{nationalCodeError}</p>}
-        <form onSubmit={handleSubmit}>
+        {nationalCodeError && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center justify-center animate-pulse">
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p>{nationalCodeError}</p>
+          </div>
+        )}        <form onSubmit={handleSubmit}>
           <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="firstName">
               نام
@@ -307,7 +313,7 @@ const CreateNormalPassenger = () => {
             />
             {errors.guardianFirstName && <p className="text-red-500 text-sm mt-1 text-right">{errors.guardianFirstName}</p>}
           </div>
-         
+
           <div className="mb-5">
             <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianMobile">
               موبایل سرپرست

@@ -10,11 +10,11 @@ export declare class PacksService {
             travelDate: string;
             travelType: string;
             packId: number | null;
+            nationalCode: string | null;
             firstName: string | null;
             lastName: string | null;
             gender: string;
             phone: string;
-            nationalCode: string | null;
             returnDate: string | null;
             birthDate: string;
             leaderName: string | null;
@@ -26,10 +26,10 @@ export declare class PacksService {
             travelDate: Date;
             type: import(".prisma/client").$Enums.PackType;
             packId: number;
-            company: string | null;
-            plate: string | null;
-            driver: string | null;
-            driverPhone: string | null;
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
         } | null;
     } & {
         id: number;
@@ -40,6 +40,46 @@ export declare class PacksService {
         status: import(".prisma/client").$Enums.PackStatus;
         busAssignmentId: number | null;
         finalConfirmationId: number | null;
+        updatedAt: Date;
+    })[]>;
+    findAllAssignedPacks(): Promise<({
+        passengers: {
+            id: number;
+            createdAt: Date;
+            travelDate: string;
+            travelType: string;
+            packId: number | null;
+            nationalCode: string | null;
+            firstName: string | null;
+            lastName: string | null;
+            gender: string;
+            phone: string;
+            returnDate: string | null;
+            birthDate: string;
+            leaderName: string | null;
+            leaderPhone: string | null;
+            createdById: number;
+        }[];
+        busAssignment: {
+            id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
+            packId: number;
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
+        } | null;
+    } & {
+        id: number;
+        createdAt: Date;
+        travelDate: Date;
+        type: import(".prisma/client").$Enums.PackType;
+        repository: number;
+        status: import(".prisma/client").$Enums.PackStatus;
+        busAssignmentId: number | null;
+        finalConfirmationId: number | null;
+        updatedAt: Date;
     })[]>;
     assignPassengerToPack(passengerData: any, req: ExpressRequest): Promise<{
         id: number;
@@ -47,35 +87,18 @@ export declare class PacksService {
         travelDate: string;
         travelType: string;
         packId: number | null;
+        nationalCode: string | null;
         firstName: string | null;
         lastName: string | null;
         gender: string;
         phone: string;
-        nationalCode: string | null;
         returnDate: string | null;
         birthDate: string;
         leaderName: string | null;
         leaderPhone: string | null;
         createdById: number;
     }>;
-    addPassengerToPack(packId: number, passengerData: any): Promise<{
-        id: number;
-        createdAt: Date;
-        travelDate: string;
-        travelType: string;
-        packId: number | null;
-        firstName: string | null;
-        lastName: string | null;
-        gender: string;
-        phone: string;
-        nationalCode: string | null;
-        returnDate: string | null;
-        birthDate: string;
-        leaderName: string | null;
-        leaderPhone: string | null;
-        createdById: number;
-    }>;
-    nextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed', packData?: any): Promise<{
+    moveToNextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed'): Promise<{
         message: string;
         updatedPack: {
             passengers: {
@@ -84,11 +107,11 @@ export declare class PacksService {
                 travelDate: string;
                 travelType: string;
                 packId: number | null;
+                nationalCode: string | null;
                 firstName: string | null;
                 lastName: string | null;
                 gender: string;
                 phone: string;
-                nationalCode: string | null;
                 returnDate: string | null;
                 birthDate: string;
                 leaderName: string | null;
@@ -100,10 +123,10 @@ export declare class PacksService {
                 travelDate: Date;
                 type: import(".prisma/client").$Enums.PackType;
                 packId: number;
-                company: string | null;
-                plate: string | null;
-                driver: string | null;
-                driverPhone: string | null;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
             } | null;
         } & {
             id: number;
@@ -114,6 +137,97 @@ export declare class PacksService {
             status: import(".prisma/client").$Enums.PackStatus;
             busAssignmentId: number | null;
             finalConfirmationId: number | null;
+            updatedAt: Date;
         };
+    }>;
+    moveToPreviousStage(packId: number): Promise<{
+        message: string;
+        updatedPack: {
+            passengers: {
+                id: number;
+                createdAt: Date;
+                travelDate: string;
+                travelType: string;
+                packId: number | null;
+                nationalCode: string | null;
+                firstName: string | null;
+                lastName: string | null;
+                gender: string;
+                phone: string;
+                returnDate: string | null;
+                birthDate: string;
+                leaderName: string | null;
+                leaderPhone: string | null;
+                createdById: number;
+            }[];
+            busAssignment: {
+                id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
+                packId: number;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
+            } | null;
+        } & {
+            id: number;
+            createdAt: Date;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
+            repository: number;
+            status: import(".prisma/client").$Enums.PackStatus;
+            busAssignmentId: number | null;
+            finalConfirmationId: number | null;
+            updatedAt: Date;
+        };
+    }>;
+    findAllConfirmedPacks(): Promise<({
+        passengers: {
+            id: number;
+            createdAt: Date;
+            travelDate: string;
+            travelType: string;
+            packId: number | null;
+            nationalCode: string | null;
+            firstName: string | null;
+            lastName: string | null;
+            gender: string;
+            phone: string;
+            returnDate: string | null;
+            birthDate: string;
+            leaderName: string | null;
+            leaderPhone: string | null;
+            createdById: number;
+        }[];
+        busAssignment: {
+            id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
+            packId: number;
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
+        } | null;
+    } & {
+        id: number;
+        createdAt: Date;
+        travelDate: Date;
+        type: import(".prisma/client").$Enums.PackType;
+        repository: number;
+        status: import(".prisma/client").$Enums.PackStatus;
+        busAssignmentId: number | null;
+        finalConfirmationId: number | null;
+        updatedAt: Date;
+    })[]>;
+    archiveOldPacks(): Promise<void>;
+    saveBusAssignment(packId: number, busAssignmentData: {
+        company: string;
+        plate: string;
+        driver: string;
+        driverPhone: string;
+    }): Promise<{
+        message: string;
     }>;
 }

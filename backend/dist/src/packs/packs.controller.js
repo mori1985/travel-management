@@ -22,20 +22,60 @@ let PacksController = class PacksController {
         this.packsService = packsService;
     }
     async findAllWithPassengers(type) {
+        console.log('Fetching packs with passengers, type:', type);
         return this.packsService.findAllWithPassengers(type);
     }
-    async nextStage(id, status) {
-        return this.packsService.nextStage(+id, status);
+    async findAllAssignedPacks() {
+        console.log('Fetching assigned packs...');
+        return this.packsService.findAllAssignedPacks();
+    }
+    async moveToNextStage(packId, status) {
+        console.log(`Received request to move pack ${packId} to status ${status}`);
+        return this.packsService.moveToNextStage(packId, status);
+    }
+    async moveToPreviousStage(packId) {
+        console.log(`Received request to move pack ${packId} to previous stage`);
+        return this.packsService.moveToPreviousStage(packId);
+    }
+    async moveToAssigned(packId) {
+        console.log(`Received request to move pack ${packId} to assigned`);
+        return this.packsService.moveToNextStage(packId, 'assigned');
     }
     async assignPassengerToPack(passengerData, req) {
+        console.log('Received request to assign passenger to pack:', passengerData);
         return this.packsService.assignPassengerToPack(passengerData, req);
     }
     async addPassengerToPack(packId, passengerData, req) {
+        console.log(`Received request to add passenger to pack ${packId}:`, passengerData);
         const userId = req.user?.['sub'];
         if (!userId) {
             throw new Error('کاربر معتبر نیست');
         }
-        return this.packsService.addPassengerToPack(packId, { ...passengerData, createdById: userId });
+        const updatedPassengerData = { ...passengerData, packId };
+        return this.packsService.assignPassengerToPack(updatedPassengerData, req);
+    }
+    async archiveOldPacks() {
+        console.log('Received request to archive old packs');
+        await this.packsService.archiveOldPacks();
+        return { message: 'پک‌های قدیمی با موفقیت آرشیو شدند' };
+    }
+    async saveBusAssignment(packId, busAssignmentData, req) {
+        console.log('Received request to saveBusAssignment for packId:', packId);
+        console.log('BusAssignment data received in controller:', busAssignmentData);
+        if (!busAssignmentData.company ||
+            !busAssignmentData.plate ||
+            !busAssignmentData.driver ||
+            !busAssignmentData.driverPhone) {
+            console.log('Validation failed: Missing required fields in busAssignmentData');
+            throw new Error('لطفاً همه فیلدهای اطلاعات اتوبوس را پر کنید');
+        }
+        const userId = req.user?.['sub'];
+        if (!userId) {
+            throw new Error('کاربر معتبر نیست');
+        }
+        const result = await this.packsService.saveBusAssignment(packId, busAssignmentData);
+        console.log('Save bus assignment result:', result);
+        return result;
     }
 };
 exports.PacksController = PacksController;
@@ -47,13 +87,33 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PacksController.prototype, "findAllWithPassengers", null);
 __decorate([
-    (0, common_1.Post)('next-stage/:id'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)('status')),
+    (0, common_1.Get)('bus-assignment'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "findAllAssignedPacks", null);
+__decorate([
+    (0, common_1.Post)('move-to-next-stage/:packId/:status'),
+    __param(0, (0, common_1.Param)('packId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Param)('status')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", Promise)
-], PacksController.prototype, "nextStage", null);
+], PacksController.prototype, "moveToNextStage", null);
+__decorate([
+    (0, common_1.Post)('previous-stage/:packId'),
+    __param(0, (0, common_1.Param)('packId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "moveToPreviousStage", null);
+__decorate([
+    (0, common_1.Post)('to-assigned/:packId'),
+    __param(0, (0, common_1.Param)('packId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "moveToAssigned", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
@@ -71,6 +131,21 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PacksController.prototype, "addPassengerToPack", null);
+__decorate([
+    (0, common_1.Post)('archive-old'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "archiveOldPacks", null);
+__decorate([
+    (0, common_1.Post)('bus-assignment/:packId'),
+    __param(0, (0, common_1.Param)('packId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PacksController.prototype, "saveBusAssignment", null);
 exports.PacksController = PacksController = __decorate([
     (0, common_1.Controller)('packs'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

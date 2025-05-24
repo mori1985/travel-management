@@ -48,14 +48,14 @@ const Navbar = () => {
                 } sm:flex sm:items-center w-full sm:w-auto absolute sm:static top-16 left-0 right-0 bg-blue-600 sm:bg-transparent p-4 sm:p-0 z-10`}
             >
               <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-x-reverse">
-                {/* لینک‌هایی که همه می‌تونن ببینن */}
+                {/* لینک‌هایی که همه می‌تونن ببینن
                 <Link
                   to="/"
                   className="text-white hover:text-blue-200 mb-2 sm:mb-0"
                   onClick={() => setIsOpen(false)}
                 >
                   صفحه اصلی
-                </Link>
+                </Link> */}
 
                 {/* لینک‌های مربوط به مسافران - برای level1, level2, admin */}
                 {(role === 'level1' || role === 'level2' || role === 'admin') && (
@@ -64,7 +64,7 @@ const Navbar = () => {
                     className="text-white hover:text-blue-200 mb-2 sm:mb-0"
                     onClick={() => setIsOpen(false)}
                   >
-                    مسافران
+                    جستجوی مسافر
                   </Link>
                 )}
 

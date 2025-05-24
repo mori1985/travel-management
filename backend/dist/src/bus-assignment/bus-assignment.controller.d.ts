@@ -1,8 +1,10 @@
 import { BusAssignmentService } from './bus-assignment.service';
 import { CreateBusAssignmentDto } from './create-bus-assignment.dto';
+import { PacksService } from '../packs/packs.service';
 export declare class BusAssignmentController {
     private readonly busAssignmentService;
-    constructor(busAssignmentService: BusAssignmentService);
+    private readonly packsService;
+    constructor(busAssignmentService: BusAssignmentService, packsService: PacksService);
     findAllWithPassengers(): Promise<({
         passengers: {
             id: number;
@@ -10,11 +12,11 @@ export declare class BusAssignmentController {
             travelDate: string;
             travelType: string;
             packId: number | null;
+            nationalCode: string | null;
             firstName: string | null;
             lastName: string | null;
             gender: string;
             phone: string;
-            nationalCode: string | null;
             returnDate: string | null;
             birthDate: string;
             leaderName: string | null;
@@ -22,14 +24,10 @@ export declare class BusAssignmentController {
             createdById: number;
         }[];
         busAssignment: {
-            id: number;
-            travelDate: Date;
-            type: import(".prisma/client").$Enums.PackType;
-            packId: number;
-            company: string | null;
-            plate: string | null;
-            driver: string | null;
-            driverPhone: string | null;
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
         } | null;
     } & {
         id: number;
@@ -40,47 +38,99 @@ export declare class BusAssignmentController {
         status: import(".prisma/client").$Enums.PackStatus;
         busAssignmentId: number | null;
         finalConfirmationId: number | null;
+        updatedAt: Date;
     })[]>;
-    assignBus(packId: string, busAssignmentData: CreateBusAssignmentDto): Promise<{
+    createBusAssignment(packId: number, busAssignmentData: CreateBusAssignmentDto): Promise<{
         message: string;
         busAssignment: {
-            pack: ({
-                passengers: {
-                    id: number;
-                    createdAt: Date;
-                    travelDate: string;
-                    travelType: string;
-                    packId: number | null;
-                    firstName: string | null;
-                    lastName: string | null;
-                    gender: string;
-                    phone: string;
-                    nationalCode: string | null;
-                    returnDate: string | null;
-                    birthDate: string;
-                    leaderName: string | null;
-                    leaderPhone: string | null;
-                    createdById: number;
-                }[];
-            } & {
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
+        };
+    }>;
+    moveToNextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed'): Promise<{
+        message: string;
+        updatedPack: {
+            passengers: {
                 id: number;
                 createdAt: Date;
+                travelDate: string;
+                travelType: string;
+                packId: number | null;
+                nationalCode: string | null;
+                firstName: string | null;
+                lastName: string | null;
+                gender: string;
+                phone: string;
+                returnDate: string | null;
+                birthDate: string;
+                leaderName: string | null;
+                leaderPhone: string | null;
+                createdById: number;
+            }[];
+            busAssignment: {
+                id: number;
                 travelDate: Date;
                 type: import(".prisma/client").$Enums.PackType;
-                repository: number;
-                status: import(".prisma/client").$Enums.PackStatus;
-                busAssignmentId: number | null;
-                finalConfirmationId: number | null;
-            }) | null;
+                packId: number;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
+            } | null;
         } & {
             id: number;
+            createdAt: Date;
             travelDate: Date;
             type: import(".prisma/client").$Enums.PackType;
-            packId: number;
-            company: string | null;
-            plate: string | null;
-            driver: string | null;
-            driverPhone: string | null;
+            repository: number;
+            status: import(".prisma/client").$Enums.PackStatus;
+            busAssignmentId: number | null;
+            finalConfirmationId: number | null;
+            updatedAt: Date;
+        };
+    }>;
+    moveToPreviousStage(packId: number): Promise<{
+        message: string;
+        updatedPack: {
+            passengers: {
+                id: number;
+                createdAt: Date;
+                travelDate: string;
+                travelType: string;
+                packId: number | null;
+                nationalCode: string | null;
+                firstName: string | null;
+                lastName: string | null;
+                gender: string;
+                phone: string;
+                returnDate: string | null;
+                birthDate: string;
+                leaderName: string | null;
+                leaderPhone: string | null;
+                createdById: number;
+            }[];
+            busAssignment: {
+                id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
+                packId: number;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
+            } | null;
+        } & {
+            id: number;
+            createdAt: Date;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
+            repository: number;
+            status: import(".prisma/client").$Enums.PackStatus;
+            busAssignmentId: number | null;
+            finalConfirmationId: number | null;
+            updatedAt: Date;
         };
     }>;
 }

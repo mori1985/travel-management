@@ -9,11 +9,11 @@ export declare class PassengersController {
         travelDate: string;
         travelType: string;
         packId: number | null;
+        nationalCode: string | null;
         firstName: string | null;
         lastName: string | null;
         gender: string;
         phone: string;
-        nationalCode: string | null;
         returnDate: string | null;
         birthDate: string;
         leaderName: string | null;
@@ -29,11 +29,11 @@ export declare class PassengersController {
         travelDate: string;
         travelType: string;
         packId: number | null;
+        nationalCode: string | null;
         firstName: string | null;
         lastName: string | null;
         gender: string;
         phone: string;
-        nationalCode: string | null;
         returnDate: string | null;
         birthDate: string;
         leaderName: string | null;
@@ -46,11 +46,11 @@ export declare class PassengersController {
         travelDate: string;
         travelType: string;
         packId: number | null;
+        nationalCode: string | null;
         firstName: string | null;
         lastName: string | null;
         gender: string;
         phone: string;
-        nationalCode: string | null;
         returnDate: string | null;
         birthDate: string;
         leaderName: string | null;

@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const bus_assignment_service_1 = require("./bus-assignment.service");
 const bus_assignment_controller_1 = require("./bus-assignment.controller");
 const prisma_service_1 = require("../prisma.service");
+const packs_module_1 = require("../packs/packs.module");
 let BusAssignmentModule = class BusAssignmentModule {
 };
 exports.BusAssignmentModule = BusAssignmentModule;
@@ -18,6 +19,7 @@ exports.BusAssignmentModule = BusAssignmentModule = __decorate([
     (0, common_1.Module)({
         controllers: [bus_assignment_controller_1.BusAssignmentController],
         providers: [bus_assignment_service_1.BusAssignmentService, prisma_service_1.PrismaService],
+        imports: [packs_module_1.PacksModule],
     })
 ], BusAssignmentModule);
 //# sourceMappingURL=bus-assignment.module.js.map

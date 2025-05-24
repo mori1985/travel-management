@@ -72,9 +72,7 @@ const Packs = () => {
 
   const handleNextStage = async (packId: number) => {
     try {
-      const response = await axios.post(`/packs/next-stage/${packId}`, { 
-        status: 'assigned'
-      });
+      const response = await axios.post(`/packs/move-to-next-stage/${packId}/assigned`);
       console.log('Next stage response:', response.data);
       navigate('/bus-assignment');
     } catch (err: any) {
@@ -178,38 +176,37 @@ const Packs = () => {
     setEditModal({ show: true, passenger: newPassenger, packId });
   };
 
-  const testAdd25Passengers = async (packId: number) => {
+  const testAdd10Passengers = async (packId: number) => {
     const pack = packs.find((p) => p.id === packId);
-    const passengerData = {
-      id: 0,
-      firstName: 'Test',
-      lastName: 'User',
-      nationalCode: `12345678${Math.floor(Math.random() * 90) + 10}`,
-      phone: '09123456789',
-      travelDate: pack?.travelDate || '1404-04-01',
-      returnDate: '1404-04-01',
-      birthDate: '1404-01-01',
-      leaderName: undefined,
-      leaderPhone: undefined,
-      gender: 'نامشخص',
-      packId,
-      travelType: pack?.type,
-    };
+    if (!pack) return;
 
     try {
-      for (let i = 0; i < 25; i++) {
-        const response = await axios.post('/passengers', {
-          ...passengerData,
-          nationalCode: `12345678${Math.floor(Math.random() * 90) + 10}`,
-        });
+      for (let i = 0; i < 10; i++) {
+        // تولید کد ملی 10 رقمی رندم و unique
+        const randomNationalCode = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        const passengerData = {
+          firstName: 'Test',
+          lastName: 'User',
+          nationalCode: randomNationalCode,
+          phone: '09123456789',
+          travelDate: pack.travelDate,
+          returnDate: '1404-04-01',
+          birthDate: '1404-01-01',
+          leaderName: undefined,
+          leaderPhone: undefined,
+          gender: 'نامشخص',
+          packId,
+          travelType: pack.type,
+        };
+        const response = await axios.post('/passengers', passengerData);
         setPacks((prevPacks) =>
           prevPacks.map((pack) =>
             pack.id === packId ? { ...pack, passengers: [...pack.passengers, response.data] } : pack
           )
         );
-        console.log(`Passenger ${i + 1} added`);
+        console.log(`Passenger ${i + 1} added with nationalCode: ${randomNationalCode}`);
       }
-      console.log('25 passengers added for testing');
+      console.log('10 passengers added for testing');
     } catch (err: any) {
       console.error('Error adding test passengers:', err);
       alert('خطا در اضافه کردن مسافران تستی: ' + (err.response?.data?.message || err.message));
@@ -362,10 +359,10 @@ const Packs = () => {
                       </button>
                     )}
                     <button
-                      onClick={() => testAdd25Passengers(pack.id)}
+                      onClick={() => testAdd10Passengers(pack.id)}
                       className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-300"
                     >
-                      تست ۲۵ مسافر
+                      تست 10 مسافر
                     </button>
                     <button
                       onClick={() => handleNextStageConfirm(pack.id)}
