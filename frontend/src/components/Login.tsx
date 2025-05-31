@@ -19,7 +19,7 @@ const Login = () => {
     }
   }, [location.search]);
 
-  const decodeToken = (token: string) => {
+  const decodeToken = (token) => {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -36,7 +36,7 @@ const Login = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Sending login request:', { username, password });
     try {
@@ -44,9 +44,7 @@ const Login = () => {
         username,
         password,
       }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         withCredentials: true,
       });
       console.log('Login response:', JSON.stringify(response.data, null, 2));
@@ -57,30 +55,50 @@ const Login = () => {
       const userRole = decoded?.role || 'unknown';
       console.log('Decoded token:', decoded);
       setRole(userRole);
-      localStorage.setItem('role', userRole); // ذخیره نقش تو localStorage
-      
-      // هدایت بر اساس نقش
+      localStorage.setItem('role', userRole);
+
       if (userRole === 'level1') {
         navigate('/passengers');
       } else if (userRole === 'level2' || userRole === 'admin') {
         navigate('/packs');
       } else {
-        navigate('/'); // در صورت نقش ناشناخته به صفحه اصلی
+        navigate('/');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Login error:', err.response?.data || err.message);
       setError(`ورود ناموفق: ${err.response?.data?.message || err.message}`);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-blue-200 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md transform transition-all hover:scale-105 animate-fade-in">
-        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">ورود به سیستم</h2>
+    <div
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{
+        backgroundImage: `url('/login-background.jpg')`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#e6f0fa',
+      }}
+    >
+      {/* Overlay برای تنظیم روشنایی و کنتراست */}
+      <div className="absolute inset-0 bg-black opacity-40"></div>
+
+      <div
+        className="p-8 rounded-xl shadow-2xl w-full max-w-md z-10 transform transition-all hover:scale-105 animate-fade-in"
+        style={{
+          backgroundColor: 'rgba(230, 240, 250, 0.3)', // همرنگ با بک‌گراند (آبی روشن شفاف)
+          backdropFilter: 'blur(5px)', // افکت محو
+          WebkitBackdropFilter: 'blur(5px)', // پشتیبانی برای مرورگرهای وب‌کیت
+          border: '1px solid rgba(255, 255, 255, 0.3)', // حاشیه ملایم
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', // سایه نرم
+        }}
+      >
+        <h2 className="text-4xl font-bold mb-6 text-center text-blue-700">ورود به سیستم</h2>
         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="username">
+            <label className="block text-gray-700 mb-2 text-right font-semibold" htmlFor="username">
               نام کاربری
             </label>
             <input
@@ -88,12 +106,12 @@ const Login = () => {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-right bg-gray-50"
               required
             />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="password">
+            <label className="block text-gray-700 mb-2 text-right font-semibold" htmlFor="password">
               رمز عبور
             </label>
             <input
@@ -101,13 +119,13 @@ const Login = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-right bg-gray-50"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300"
+            className="w-full bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold shadow-md hover:shadow-lg"
           >
             ورود
           </button>

@@ -31,7 +31,7 @@ interface Pack {
 const Packs = () => {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [expandedPack, setExpandedPack] = useState<number | null>(null);
-  const [selectedType, setSelectedType] = useState<'normal' | 'vip' | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'normal' | 'vip'>('all'); // فیلتر پیش‌فرض روی همه
   const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; packId: number; passengerId: number }>({ show: false, packId: 0, passengerId: 0 });
   const [editModal, setEditModal] = useState<{ show: boolean; passenger?: Passenger; packId?: number }>({ show: false, passenger: undefined, packId: undefined });
@@ -51,7 +51,7 @@ const Packs = () => {
     try {
       setIsLoading(true);
       const response = await axios.get('/packs', {
-        params: { type: selectedType, status: 'pending' },
+        params: { type: filterType === 'all' ? undefined : filterType, status: 'pending' }, // ارسال پارامتر type فقط وقتی all نیست
       });
       console.log('Fetched packs from server:', response.data);
       setPacks(response.data);
@@ -64,7 +64,7 @@ const Packs = () => {
 
   useEffect(() => {
     fetchPacks();
-  }, [selectedType, location.pathname]);
+  }, [filterType, location.pathname]);
 
   const togglePack = (packId: number) => {
     setExpandedPack(expandedPack === packId ? null : packId);
@@ -182,7 +182,6 @@ const Packs = () => {
 
     try {
       for (let i = 0; i < 10; i++) {
-        // تولید کد ملی 10 رقمی رندم و unique
         const randomNationalCode = Math.floor(1000000000 + Math.random() * 9000000000).toString();
         const passengerData = {
           firstName: 'Test',
@@ -233,7 +232,10 @@ const Packs = () => {
     setNextStageConfirm({ show: false, packId: 0 });
   };
 
-  const filteredPacks = packs.filter((pack) => pack.type === selectedType);
+  // فیلتر کردن پک‌ها مثل FinalConfirmation
+  const filteredPacks = packs.filter((pack) =>
+    filterType === 'all' ? true : pack.type === filterType
+  );
 
   if (isLoading) {
     return (
@@ -249,135 +251,146 @@ const Packs = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-100 to-purple-200 p-6">
       <h1 className="text-4xl font-bold text-center text-purple-700 mb-8">پک‌های مسافرتی</h1>
+
+      {/* بخش فیلتر مثل FinalConfirmation */}
       <div className="flex justify-center gap-4 mb-6">
         <button
-          onClick={() => setSelectedType('normal')}
-          className={`px-4 py-2 rounded-lg ${selectedType === 'normal' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'
-            } hover:bg-purple-700 hover:text-white transition duration-300`}
+          onClick={() => setFilterType('all')}
+          className={`px-4 py-2 rounded-lg transition duration-300 ${
+            filterType === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          همه پک‌ها
+        </button>
+        <button
+          onClick={() => setFilterType('normal')}
+          className={`px-4 py-2 rounded-lg transition duration-300 ${
+            filterType === 'normal' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
         >
           پک‌های عادی
         </button>
         <button
-          onClick={() => setSelectedType('vip')}
-          className={`px-4 py-2 rounded-lg ${selectedType === 'vip' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'
-            } hover:bg-purple-700 hover:text-white transition duration-300`}
+          onClick={() => setFilterType('vip')}
+          className={`px-4 py-2 rounded-lg transition duration-300 ${
+            filterType === 'vip' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
         >
           پک‌های VIP
         </button>
       </div>
-      {selectedType ? (
-        filteredPacks.length === 0 ? (
-          <p className="text-center text-gray-600">هیچ پکی از نوع {selectedType === 'normal' ? 'عادی' : 'VIP'} یافت نشد</p>
-        ) : (
-          <div className="space-y-6">
-            {filteredPacks.map((pack) => (
-              <div key={pack.id} className="bg-white rounded-lg shadow-lg p-6">
-                <div
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() => togglePack(pack.id)}
-                >
-                  <h2 className={`text-2xl font-semibold ${isPackFull(pack) ? 'text-red-500 animate-pulse' : 'text-purple-600'}`}>
-                    پک {pack.type === 'vip' ? 'VIP' : 'عادی'} - کد: {pack.id} - تاریخ: {formatDate(pack.travelDate)} - تعداد مسافران: {pack.passengers.length}/{pack.type === 'vip' ? 25 : 40}
-                  </h2>
-                  {expandedPack === pack.id ? (
-                    <FaChevronUp className="text-purple-600" />
-                  ) : (
-                    <FaChevronDown className="text-purple-600" />
-                  )}
-                </div>
-                {expandedPack === pack.id && (
-                  <div className="mt-4">
-                    {pack.passengers.length === 0 ? (
-                      <p className="text-center text-gray-600">هیچ مسافری در این پک ثبت نشده است</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-right">
-                          <thead>
-                            <tr className="bg-purple-600 text-white">
-                              <th className="p-3 border border-gray-300">ردیف</th>
-                              <th className="p-3 border border-gray-300">نام</th>
-                              <th className="p-3 border border-gray-300">نام خانوادگی</th>
-                              <th className="p-3 border border-gray-300">کد ملی</th>
-                              <th className="p-3 border border-gray-300">شماره موبایل</th>
-                              <th className="p-3 border border-gray-300">تاریخ رفت</th>
-                              <th className="p-3 border border-gray-300">تاریخ برگشت</th>
-                              <th className="p-3 border border-gray-300">تاریخ تولد</th>
-                              <th className="p-3 border border-gray-300">نام سرپرست</th>
-                              <th className="p-3 border border-gray-300">موبایل سرپرست</th>
-                              <th className="p-3 border border-gray-300">جنسیت</th>
-                              <th className="p-3 border border-gray-300">عملیات</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {pack.passengers.map((passenger, index) => (
-                              <tr key={passenger.id} className="hover:bg-gray-100">
-                                <td className="p-3 border border-gray-300">{index + 1}</td>
-                                <td className="p-3 border border-gray-300">{passenger.firstName}</td>
-                                <td className="p-3 border border-gray-300">{passenger.lastName}</td>
-                                <td className="p-3 border border-gray-300">{passenger.nationalCode}</td>
-                                <td className="p-3 border border-gray-300">{passenger.phone}</td>
-                                <td className="p-3 border border-gray-300">{formatDate(passenger.travelDate)}</td>
-                                <td className="p-3 border border-gray-300">
-                                  {formatDate(passenger.returnDate)}
-                                </td>
-                                <td className="p-3 border border-gray-300">
-                                  {formatDate(passenger.birthDate)}
-                                </td>
-                                <td className="p-3 border border-gray-300">{passenger.leaderName || '-'}</td>
-                                <td className="p-3 border border-gray-300">{passenger.leaderPhone || '-'}</td>
-                                <td className="p-3 border border-gray-300">
-                                  {passenger.gender === 'unknown' ? 'نامشخص' : passenger.gender}
-                                </td>
-                                <td className="p-3 border border-gray-300">
-                                  <button
-                                    onClick={() => handleEditPassenger(passenger)}
-                                    className="text-blue-500 hover:text-blue-700 mx-2"
-                                    title="ویرایش"
-                                  >
-                                    <FaEdit />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeletePassenger(pack.id, passenger.id)}
-                                    className="text-red-500 hover:text-red-700 mx-2"
-                                    title="حذف"
-                                  >
-                                    <FaTrash />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                    {!isPackFull(pack) && (
-                      <button
-                        onClick={() => addPassenger(pack.id)}
-                        className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 flex items-center"
-                      >
-                        <FaPlus className="mr-2" /> افزودن مسافر
-                      </button>
-                    )}
-                    <button
-                      onClick={() => testAdd10Passengers(pack.id)}
-                      className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-300"
-                    >
-                      تست 10 مسافر
-                    </button>
-                    <button
-                      onClick={() => handleNextStageConfirm(pack.id)}
-                      className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-300"
-                    >
-                      انتقال به مرحله بعدی
-                    </button>
-                  </div>
+
+      {filteredPacks.length === 0 ? (
+        <p className="text-center text-gray-600">
+          هیچ پکی برای نمایش با فیلتر انتخاب‌شده موجود نیست
+        </p>
+      ) : (
+        <div className="space-y-6">
+          {filteredPacks.map((pack) => (
+            <div key={pack.id} className="bg-white rounded-lg shadow-lg p-6">
+              <div
+                className="flex justify-between items-center cursor-pointer"
+                onClick={() => togglePack(pack.id)}
+              >
+                <h2 className={`text-2xl font-semibold ${isPackFull(pack) ? 'text-red-500 animate-pulse' : 'text-purple-600'}`}>
+                  پک {pack.type === 'vip' ? 'VIP' : 'عادی'} - کد: {pack.id} - تاریخ: {formatDate(pack.travelDate)} - تعداد مسافران: {pack.passengers.length}/{pack.type === 'vip' ? 25 : 40}
+                </h2>
+                {expandedPack === pack.id ? (
+                  <FaChevronUp className="text-purple-600" />
+                ) : (
+                  <FaChevronDown className="text-purple-600" />
                 )}
               </div>
-            ))}
-          </div>
-        )
-      ) : (
-        <p className="text-center text-gray-600">لطفاً نوع پک را انتخاب کنید</p>
+              {expandedPack === pack.id && (
+                <div className="mt-4">
+                  {pack.passengers.length === 0 ? (
+                    <p className="text-center text-gray-600">هیچ مسافری در این پک ثبت نشده است</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse text-right">
+                        <thead>
+                          <tr className="bg-purple-600 text-white">
+                            <th className="p-3 border border-gray-300">ردیف</th>
+                            <th className="p-3 border border-gray-300">نام</th>
+                            <th className="p-3 border border-gray-300">نام خانوادگی</th>
+                            <th className="p-3 border border-gray-300">کد ملی</th>
+                            <th className="p-3 border border-gray-300">شماره موبایل</th>
+                            <th className="p-3 border border-gray-300">تاریخ رفت</th>
+                            <th className="p-3 border border-gray-300">تاریخ برگشت</th>
+                            <th className="p-3 border border-gray-300">تاریخ تولد</th>
+                            <th className="p-3 border border-gray-300">نام سرپرست</th>
+                            <th className="p-3 border border-gray-300">موبایل سرپرست</th>
+                            <th className="p-3 border border-gray-300">جنسیت</th>
+                            <th className="p-3 border border-gray-300">عملیات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pack.passengers.map((passenger, index) => (
+                            <tr key={passenger.id} className="hover:bg-gray-100">
+                              <td className="p-3 border border-gray-300">{index + 1}</td>
+                              <td className="p-3 border border-gray-300">{passenger.firstName}</td>
+                              <td className="p-3 border border-gray-300">{passenger.lastName}</td>
+                              <td className="p-3 border border-gray-300">{passenger.nationalCode}</td>
+                              <td className="p-3 border border-gray-300">{passenger.phone}</td>
+                              <td className="p-3 border border-gray-300">{formatDate(passenger.travelDate)}</td>
+                              <td className="p-3 border border-gray-300">
+                                {formatDate(passenger.returnDate)}
+                              </td>
+                              <td className="p-3 border border-gray-300">
+                                {formatDate(passenger.birthDate)}
+                              </td>
+                              <td className="p-3 border border-gray-300">{passenger.leaderName || '-'}</td>
+                              <td className="p-3 border border-gray-300">{passenger.leaderPhone || '-'}</td>
+                              <td className="p-3 border border-gray-300">
+                                {passenger.gender === 'unknown' ? 'نامشخص' : passenger.gender}
+                              </td>
+                              <td className="p-3 border border-gray-300">
+                                <button
+                                  onClick={() => handleEditPassenger(passenger)}
+                                  className="text-blue-500 hover:text-blue-700 mx-2"
+                                  title="ویرایش"
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePassenger(pack.id, passenger.id)}
+                                  className="text-red-500 hover:text-red-700 mx-2"
+                                  title="حذف"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {!isPackFull(pack) && (
+                    <button
+                      onClick={() => addPassenger(pack.id)}
+                      className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 flex items-center"
+                    >
+                      <FaPlus className="mr-2" /> افزودن مسافر
+                    </button>
+                  )}
+                  <button
+                    onClick={() => testAdd10Passengers(pack.id)}
+                    className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-300"
+                  >
+                    تست 10 مسافر
+                  </button>
+                  <button
+                    onClick={() => handleNextStageConfirm(pack.id)}
+                    className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-300"
+                  >
+                    انتقال به مرحله بعدی
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
 
       <DeleteConfirmModal

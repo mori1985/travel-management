@@ -13,6 +13,8 @@ import CreateBus from './components/CreateBus';
 import ErrorBoundary from './components/ErrorBoundary'; // اضافه کردن ErrorBoundary
 import BusAssignment from './components/BusAssignment';
 import FinalConfirmation from './components/FinalConfirmation';
+import AdminReport from './components/AdminReport';
+import SendSMS from './components/SendSMS';
 
 
 
@@ -53,6 +55,9 @@ const AppContent = () => {
           <Route path="/passengers/create/vip" element={<CreateVipPassenger />} />
           <Route path="/bus-assignment" element={<BusAssignment />} />
           <Route path="/final-confirmation" element={<FinalConfirmation />} />
+          <Route path="/admin-report" element={<AdminReport />} />
+          <Route path="/send-sms/:packId" element={<SendSMS />} />
+
         </Route>
       </Routes>
     </ErrorBoundary>

@@ -22,7 +22,7 @@ model Passenger {
   lastName      String?
   gender        String
   phone         String
-  nationalCode  String?         @unique
+  nationalCode  String          @unique // ? حذف شده
   travelDate    String
   returnDate    String?
   birthDate     String
@@ -38,7 +38,6 @@ model Passenger {
 
   @@index([travelDate])
 }
-
 model Pack {
   id              Int             @id @default(autoincrement())
   travelDate      DateTime
@@ -92,13 +91,18 @@ model FinalConfirmation {
 }
 
 model SmsHistory {
-  id        Int      @id @default(autoincrement())
-  packId    Int
-  pack      Pack     @relation(fields: [packId], references: [id])
-  text      String
-  sentAt    DateTime
-  count     Int
-  createdAt DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  packId         Int
+  recipientPhone String
+  recipientType  String
+  text           String
+  sentAt         DateTime
+  status         String
+  error          String?  // برای ذخیره پیام خطا (اضافه شده)
+  createdBy      Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  pack           Pack     @relation(fields: [packId], references: [id])
 }
 
 model PackHistory {

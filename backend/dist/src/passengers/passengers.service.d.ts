@@ -11,7 +11,7 @@ export declare class PassengersService {
         travelDate: string;
         travelType: string;
         packId: number | null;
-        nationalCode: string | null;
+        nationalCode: string;
         firstName: string | null;
         lastName: string | null;
         gender: string;
@@ -28,7 +28,7 @@ export declare class PassengersService {
         travelDate: string;
         travelType: string;
         packId: number | null;
-        nationalCode: string | null;
+        nationalCode: string;
         firstName: string | null;
         lastName: string | null;
         gender: string;
@@ -48,7 +48,7 @@ export declare class PassengersService {
         travelDate: string;
         travelType: string;
         packId: number | null;
-        nationalCode: string | null;
+        nationalCode: string;
         firstName: string | null;
         lastName: string | null;
         gender: string;
@@ -65,7 +65,7 @@ export declare class PassengersService {
         travelDate: string;
         travelType: string;
         packId: number | null;
-        nationalCode: string | null;
+        nationalCode: string;
         firstName: string | null;
         lastName: string | null;
         gender: string;
