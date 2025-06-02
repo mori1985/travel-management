@@ -23,11 +23,7 @@ let SmsController = class SmsController {
     }
     async sendSms(packId, sendSmsDto) {
         console.log('Received sendSms request:', { packId, sendSmsDto });
-        const { testPhone, selectedCompanies, selectedResponsibles, messageText } = sendSmsDto;
         const adminId = 1;
-        if (testPhone) {
-            return this.smsService.sendTestSms(packId, testPhone, messageText, adminId);
-        }
         return this.smsService.sendSms(packId, sendSmsDto, adminId);
     }
     async getSmsReport(packId) {

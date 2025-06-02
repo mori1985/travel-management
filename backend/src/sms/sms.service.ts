@@ -7,7 +7,7 @@ const request = require('request');
 
 interface Recipient {
   phone: string;
-  type: string; // passenger, driver, company, responsible, test
+  type: string; // passenger, driver, company, responsible
 }
 
 interface RequestResponse {
@@ -32,19 +32,27 @@ export class SmsService {
     this.senderNumber = '30006703337085'; // شماره خط خدماتی معتبر (از پنل قاصدک بگیر)
   }
 
-  // لیست فرضی شرکت‌ها و شماره‌ها (بعداً با لیست واقعی جایگزین می‌شه)
+  // لیست شرکت‌ها و شماره‌ها
   private readonly companies: { name: string; phone: string }[] = [
     { name: 'ایران‌پیما', phone: '09120000001' },
     { name: 'هما', phone: '09120000002' },
   ];
 
-  // لیست فرضی مسئولین (بعداً با لیست واقعی جایگزین می‌شه)
+  // لیست مسئولین
   private readonly responsiblePersons: { name: string; phone: string }[] = [
-    { name: 'علی محمدی', phone: '09123456789' },
-    { name: 'رضا احمدی', phone: '09129876543' },
+    { name: 'علی محمدی', phone: '09120961862' },
+    { name: 'رضا احمدی', phone: '09391872895' },
+    { name: 'حسن رضایی', phone: '09127654321' },
+    { name: 'محمد حسینی', phone: '09121234567' },
+    { name: 'سعید کریمی', phone: '09122345678' },
+    { name: 'مهدی موسوی', phone: '09123467890' },
+    { name: 'علی اکبری', phone: '09124567890' },
+    { name: 'رضا جعفری', phone: '09125678901' },
+    { name: 'حسین علوی', phone: '09126789012' },
+    { name: 'امیر قاسمی', phone: '09127890123' },
   ];
 
-  // جمع‌آوری دریافت‌کنندگان (فعلاً غیرفعال تا تست تکمیل بشه)
+  // جمع‌آوری دریافت‌کنندگان به‌صورت خودکار
   async getRecipients(
     packId: number,
     selectedCompanies: string[],
@@ -52,10 +60,19 @@ export class SmsService {
   ): Promise<Recipient[]> {
     const recipients: Recipient[] = [];
 
-    // 1. مسافران (از جدول Passenger)
+    // 1. نوع پک رو بگیریم تا تعداد مسافران رو مشخص کنیم
+    const pack = await this.prisma.pack.findUnique({
+      where: { id: packId },
+      select: { type: true },
+    });
+    const isVip = pack?.type === 'vip';
+    const passengerLimit = isVip ? 25 : 40; // VIP: 25 مسافر، عادی: 40 مسافر
+
+    // 2. مسافران (به تعداد مشخص از دیتابیس)
     const passengers = await this.prisma.passenger.findMany({
       where: { packId },
       select: { phone: true },
+      take: passengerLimit, // محدود کردن تعداد مسافران
     });
     passengers.forEach((passenger) => {
       if (passenger.phone) {
@@ -63,7 +80,7 @@ export class SmsService {
       }
     });
 
-    // 2. راننده (از BusAssignment)
+    // 3. راننده (از BusAssignment)
     const busAssignment = await this.prisma.busAssignment.findFirst({
       where: { packId },
       select: { driverPhone: true },
@@ -72,7 +89,7 @@ export class SmsService {
       recipients.push({ phone: busAssignment.driverPhone, type: 'driver' });
     }
 
-    // 3. شرکت‌ها (انتخاب‌شده توسط ادمین)
+    // 4. شرکت (انتخاب خودکار شماره بر اساس نام شرکت انتخاب‌شده)
     const companies = this.companies.filter((company) =>
       selectedCompanies.includes(company.name),
     );
@@ -80,7 +97,7 @@ export class SmsService {
       recipients.push({ phone: company.phone, type: 'company' });
     });
 
-    // 4. مسئولین (انتخاب‌شده توسط ادمین)
+    // 5. مسئولین (انتخاب خودکار شماره بر اساس نام‌های انتخاب‌شده)
     const responsibles = this.responsiblePersons.filter((person) =>
       selectedResponsibles.includes(person.name),
     );
@@ -106,32 +123,39 @@ export class SmsService {
       select: { company: true },
     });
 
-    const travelDate = pack?.travelDate
-      ? new Date(pack.travelDate).toLocaleDateString('fa-IR')
-      : 'نامشخص';
+    console.log('Raw travelDate from database:', pack?.travelDate);
+
+    const travelDate = pack?.travelDate?.toISOString().split('T')[0] || 'نامشخص';
+    console.log('Formatted travelDate:', travelDate);
+
     const plate = busAssignment?.plate || 'نامشخص';
     const company = finalConfirmation?.company || 'نامشخص';
     const travelType = pack?.type === 'vip' ? 'VIP' : 'عادی';
 
-    return `مسافر گرامی تاریخ سفر شما ${travelDate} با اتوبوس به شماره پلاک ${plate} با ${company} نوع اتوبوس ${travelType} می‌باشد لذا برای نهایی کردن سفر خود تا 24 ساعت آینده به پایانه مسافربری قزوین ${company} مراجعه نمایید.`;
+    const messageText = `مسافر گرامی سلام\nتاریخ سفر شما: ${travelDate}\nشماره پلاک اتوبوس: ${plate}\nشرکت مسافربری: ${company}\nنوع اتوبوس: ${travelType}\nلذا برای نهایی کردن سفر خود تا 24 ساعت آینده به پایانه مسافربری قزوین شرکت ${company} مراجعه نمایید.`;
+    console.log('Final messageText:', messageText);
+
+    return messageText;
   }
 
-  // ارسال پیامک (برای تست و حالت اصلی)
-  private async sendSingleSms(
+  // ارسال انبوه پیامک با API send/bulk
+  private async sendBulkSms(
     packId: number,
-    recipient: Recipient,
+    recipients: Recipient[],
     messageText: string,
     adminId: number,
   ): Promise<any> {
     const apiKey = this.configService.get<string>('GHASEDAK_API_KEY');
+    const receptorList = recipients.map((r) => r.phone).join(','); // لیست شماره‌ها با کاما جدا شده
+
     const options = {
       method: 'POST',
-      url: 'http://api.ghasedaksms.com/v2/sms/send/simple',
+      url: 'http://api.ghasedaksms.com/v2/sms/send/bulk',
       headers: { apikey: apiKey },
       form: {
         message: messageText,
         sender: this.senderNumber,
-        receptor: recipient.phone,
+        receptor: receptorList,
       },
     };
 
@@ -147,83 +171,119 @@ export class SmsService {
       });
 
       const parsedBody = JSON.parse(body);
-      console.log('پاسخ قاصدک:', parsedBody);
       let status = 'failed';
-      let errorMessage = null;
+      let errorMessage: string | null = null;
 
-      if (parsedBody.result === 'success' && parsedBody.messageids > 1000) {
-        status = 'success';
+      if (parsedBody.result === 'success') {
+        // پارس کردن messageids به آرایه‌ای از اعداد
+        const messageIds = parsedBody.messageids.split(',').map((id: string) => parseInt(id.trim()));
+        // چک کردن اینکه همه messageids بزرگ‌تر از 1000 باشن
+        const allIdsValid = messageIds.every((id: number) => id > 1000);
+        if (allIdsValid) {
+          status = 'success';
+        } else {
+          errorMessage = `شناسه‌های پیامک نامعتبر: ${parsedBody.messageids}`;
+        }
       } else {
         errorMessage = parsedBody.message || `خطا از قاصدک: کد ${parsedBody.messageids}`;
       }
 
-      // ذخیره تو دیتابیس
-      await this.prisma.smsHistory.create({
-        data: {
-          packId,
-          recipientPhone: recipient.phone,
-          recipientType: recipient.type,
-          text: messageText,
-          sentAt: new Date(),
-          status,
-          error: errorMessage,
-          createdBy: adminId,
-        },
+      // ذخیره گزارش برای هر گیرنده
+      const smsRecords = recipients.map((recipient) => ({
+        packId,
+        recipientPhone: recipient.phone,
+        recipientType: recipient.type,
+        text: messageText,
+        sentAt: new Date(),
+        status: status,
+        error: status === 'failed' ? errorMessage : null,
+        createdBy: adminId,
+      }));
+
+      await this.prisma.smsHistory.createMany({
+        data: smsRecords,
       });
 
       if (status === 'failed') {
-        throw new Error(errorMessage || 'خطا در ارسال پیامک');
+        throw new Error(errorMessage || 'خطا در ارسال پیامک انبوه');
       }
 
-      return { recipient, status: 'success', response: parsedBody };
+      return { recipients, status: 'success', response: parsedBody };
     } catch (error: any) {
-      console.error(`خطا در ارسال به ${recipient.phone}:`, error.message);
-      await this.prisma.smsHistory.create({
-        data: {
-          packId,
-          recipientPhone: recipient.phone,
-          recipientType: recipient.type,
-          text: messageText,
-          sentAt: new Date(),
-          status: 'failed',
-          error: error.message,
-          createdBy: adminId,
-        },
+      console.error('خطا در ارسال پیامک انبوه:', error.message);
+      const smsRecords = recipients.map((recipient) => ({
+        packId,
+        recipientPhone: recipient.phone,
+        recipientType: recipient.type,
+        text: messageText,
+        sentAt: new Date(),
+        status: 'failed',
+        error: error.message,
+        createdBy: adminId,
+      }));
+
+      await this.prisma.smsHistory.createMany({
+        data: smsRecords,
       });
       throw error;
     }
   }
 
-  // ارسال پیامک تست
-  async sendTestSms(
-    packId: number,
-    testPhone: string,
-    messageText: string,
-    adminId: number,
-  ): Promise<any> {
-    const recipient: Recipient = { phone: testPhone, type: 'test' };
-    return this.sendSingleSms(packId, recipient, messageText, adminId);
-  }
-
-  // ارسال پیامک (فعلاً غیرفعال تا تست تکمیل بشه)
+  // ارسال پیامک انبوه
   async sendSms(
     packId: number,
     sendSmsDto: SendSmsDto,
     adminId: number,
   ): Promise<any> {
-    throw new Error('ارسال پیامک به همه اشخاص فعلاً غیرفعال است. لطفاً از دکمه تست استفاده کنید.');
+    const { selectedCompanies, selectedResponsibles, messageText } = sendSmsDto;
+
+    // جمع‌آوری گیرندگان
+    const recipients = await this.getRecipients(packId, selectedCompanies, selectedResponsibles);
+
+    if (recipients.length === 0) {
+      throw new HttpException('هیچ گیرنده‌ای برای ارسال پیامک پیدا نشد.', HttpStatus.BAD_REQUEST);
+    }
+
+    // ارسال انبوه پیامک
+    const result = await this.sendBulkSms(packId, recipients, messageText, adminId);
+
+    return {
+      message: 'پیامک با موفقیت ارسال شد.',
+      successCount: recipients.length,
+      recipients,
+    };
   }
 
-  // گزارش تعداد پیامک‌ها
+  // گزارش تعداد پیامک‌های موفق
   async getSmsReport(
     packId: number,
-  ): Promise<{ count: number; messages: any[] }> {
+  ): Promise<{ successCount: number; messages: { text: string; sentAt: string }[] }> {
     const messages = await this.prisma.smsHistory.findMany({
-      where: { packId },
+      where: {
+        packId,
+        status: 'success',
+      },
+      select: {
+        text: true,
+        sentAt: true,
+      },
       orderBy: { sentAt: 'desc' },
+      take: 1, // فقط اولین پیامک موفق رو می‌گیریم
     });
-    const count = messages.length;
-    return { count, messages };
+
+    const successCount = await this.prisma.smsHistory.count({
+      where: {
+        packId,
+        status: 'success',
+      },
+    });
+
+    const formattedMessages = messages.map((msg) => ({
+      text: msg.text,
+      sentAt: new Date(msg.sentAt).toLocaleString('fa-IR'),
+    }));
+
+    return { successCount, messages: formattedMessages };
   }
 
   // دریافت لیست شرکت‌ها و مسئولین برای انتخاب

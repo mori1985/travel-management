@@ -12,15 +12,7 @@ export class SmsController {
     @Body() sendSmsDto: SendSmsDto,
   ) {
     console.log('Received sendSms request:', { packId, sendSmsDto });
-    const { testPhone, selectedCompanies, selectedResponsibles, messageText } = sendSmsDto;
-
     const adminId = 1; // چون احراز هویت نداریم، یه مقدار پیش‌فرض می‌ذاریم
-
-    if (testPhone) {
-      // حالت تست: فقط به شماره تست ارسال می‌شه
-      return this.smsService.sendTestSms(packId, testPhone, messageText, adminId);
-    }
-
     return this.smsService.sendSms(packId, sendSmsDto, adminId);
   }
 

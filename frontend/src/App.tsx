@@ -15,6 +15,7 @@ import BusAssignment from './components/BusAssignment';
 import FinalConfirmation from './components/FinalConfirmation';
 import AdminReport from './components/AdminReport';
 import SendSMS from './components/SendSMS';
+import SmsReport from './components/SmsReport';
 
 
 
@@ -57,7 +58,7 @@ const AppContent = () => {
           <Route path="/final-confirmation" element={<FinalConfirmation />} />
           <Route path="/admin-report" element={<AdminReport />} />
           <Route path="/send-sms/:packId" element={<SendSMS />} />
-
+          <Route path="/sms-report" element={<SmsReport />} />
         </Route>
       </Routes>
     </ErrorBoundary>

@@ -14,12 +14,14 @@ export declare class SmsService {
     private readonly responsiblePersons;
     getRecipients(packId: number, selectedCompanies: string[], selectedResponsibles: string[]): Promise<Recipient[]>;
     generateMessageText(packId: number): Promise<string>;
-    private sendSingleSms;
-    sendTestSms(packId: number, testPhone: string, messageText: string, adminId: number): Promise<any>;
+    private sendBulkSms;
     sendSms(packId: number, sendSmsDto: SendSmsDto, adminId: number): Promise<any>;
     getSmsReport(packId: number): Promise<{
-        count: number;
-        messages: any[];
+        successCount: number;
+        messages: {
+            text: string;
+            sentAt: string;
+        }[];
     }>;
     getCompaniesAndResponsibles(): {
         companies: string[];

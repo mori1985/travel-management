@@ -1,4 +1,4 @@
-import { IsString, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsArray } from 'class-validator';
 
 export class SendSmsDto {
   @IsArray()
@@ -9,8 +9,4 @@ export class SendSmsDto {
 
   @IsString()
   messageText: string;
-
-  @IsOptional()
-  @IsString()
-  testPhone?: string;
 }

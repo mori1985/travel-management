@@ -15,7 +15,6 @@ class SendSmsDto {
     selectedCompanies;
     selectedResponsibles;
     messageText;
-    testPhone;
 }
 exports.SendSmsDto = SendSmsDto;
 __decorate([
@@ -30,9 +29,4 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendSmsDto.prototype, "messageText", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], SendSmsDto.prototype, "testPhone", void 0);
 //# sourceMappingURL=send-sms.dto.js.map

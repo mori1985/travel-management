@@ -1,4 +1,4 @@
-import { Module, Global } from '@nestjs/common'; // اضافه کردن Global
+import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,12 +11,9 @@ import { FinalConfirmationModule } from './final-confirmation/final-confirmation
 import { PassengersSearchModule } from './passengerssearch/passengerssearch.module';
 import { ReportModule } from './report/report.module';
 import { SmsModule } from './sms/sms.module';
-import { ReportController } from './report/report.controller';
-import { SmsController } from './sms/sms.controller';
-import { ReportService } from './report/report.service';
-import { SmsService } from './sms/sms.service';
+import { SmsReportModule } from './sms-report/sms-report.module';
 
-@Global() // اضافه کردن @Global() برای دسترسی گلوبال
+@Global()
 @Module({
   imports: [
     AuthModule,
@@ -26,11 +23,12 @@ import { SmsService } from './sms/sms.service';
     FinalConfirmationModule,
     PassengersSearchModule,
     ReportModule,
-    ConfigModule.forRoot({ isGlobal: true }), // تنظیم ConfigModule به‌صورت گلوبال
+    ConfigModule.forRoot({ isGlobal: true }),
     SmsModule,
+    SmsReportModule,
   ],
-  controllers: [ReportController, SmsController],
-  providers: [AppService, PrismaService, ReportService, SmsService],
-  exports: [PrismaService], // صادر کردن PrismaService برای استفاده در ماژول‌های دیگر
+  controllers: [AppController], // فقط AppController نگه دار
+  providers: [AppService, PrismaService], // فقط AppService و PrismaService نگه دار
+  exports: [PrismaService],
 })
 export class AppModule {}

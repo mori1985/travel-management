@@ -5,8 +5,11 @@ export declare class SmsController {
     constructor(smsService: SmsService);
     sendSms(packId: number, sendSmsDto: SendSmsDto): Promise<any>;
     getSmsReport(packId: number): Promise<{
-        count: number;
-        messages: any[];
+        successCount: number;
+        messages: {
+            text: string;
+            sentAt: string;
+        }[];
     }>;
     getCompaniesAndResponsibles(): {
         companies: string[];

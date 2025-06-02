@@ -483,11 +483,11 @@ const FinalConfirmation = () => {
                 </tbody>
               </table>
 
-              <div class="mt-8 no-print">
-                <button onclick="setTimeout(() => window.print(), 500)" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+              <div className="mt-8 no-print">
+                <button onclick="setTimeout(() => window.print(), 500)" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
                   پرینت
                 </button>
-                <button onclick="window.close()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 ml-2">
+                <button onclick="window.close()" className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 ml-2">
                   بستن
                 </button>
               </div>
@@ -769,11 +769,7 @@ const FinalConfirmation = () => {
                   </ul>
                 </ul>
               </div>
-            ) : (
-              <div className="bg-yellow-500 text-white p-4 rounded-lg mb-4 text-center">
-                <h3 className="text-lg font-bold">تا کنون پیامکی برای این پک ارسال نشده است</h3>
-              </div>
-            )}
+            ) : null}
             <SendSMS
               packId={showSendSMSModal}
               onClose={() => {
