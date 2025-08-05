@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Request as ExpressRequest } from 'express';
 
@@ -30,7 +30,7 @@ export class PacksService {
 
     const userId = req.user?.['sub'] as number;
     if (!userId) {
-      throw new Error('کاربر معتبر نیست');
+      throw new HttpException('کاربر معتبر نیست', HttpStatus.UNAUTHORIZED);
     }
 
     // چک کردن تکراری بودن nationalCode
@@ -38,8 +38,9 @@ export class PacksService {
       where: { nationalCode: nationalCode },
     });
     if (existingPassenger) {
-      throw new Error(
+      throw new HttpException(
         `کد ملی ${nationalCode} قبلاً برای مسافر دیگری ثبت شده است.`,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -50,7 +51,7 @@ export class PacksService {
         include: { passengers: true },
       });
       if (!pack) {
-        throw new Error('پک یافت نشد');
+        throw new HttpException('پک یافت نشد', HttpStatus.NOT_FOUND);
       }
     } else {
       const parsedTravelDate = new Date(travelDate).toISOString().split('T')[0];
@@ -86,7 +87,7 @@ export class PacksService {
     }
 
     if (!pack) {
-      throw new Error('ایجاد پک با شکست مواجه شد');
+      throw new HttpException('ایجاد پک با شکست مواجه شد', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     const passengerDataToCreate = {
@@ -124,7 +125,7 @@ export class PacksService {
       });
 
       if (!pack) {
-        throw new Error(`پک با شناسه ${packId} یافت نشد`);
+        throw new HttpException(`پک با شناسه ${packId} یافت نشد`, HttpStatus.NOT_FOUND);
       }
 
       if (status === 'pending') {
@@ -168,7 +169,7 @@ export class PacksService {
         });
 
         if (!busAssignment) {
-          throw new Error('تخصیص اتوبوس برای این پک یافت نشد');
+          throw new HttpException('تخصیص اتوبوس برای این پک یافت نشد', HttpStatus.NOT_FOUND);
         }
 
         const existingFinalConfirmation =
@@ -377,7 +378,7 @@ export class PacksService {
       });
 
       if (!pack) {
-        throw new Error('پک یافت نشد');
+        throw new HttpException('پک یافت نشد', HttpStatus.NOT_FOUND);
       }
 
       const newAssignment = await this.prisma.busAssignment.create({
@@ -399,6 +400,6 @@ export class PacksService {
       });
     }
 
-    return { message: 'اطلاعات اتوبوس با موفقیت ثبت شد' };
+      { message: 'اطلاعات اتوبوس با موفقیت ثبت شد' };
   }
 }

@@ -1,8 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
-const bcrypt = require("bcrypt");
-const prisma = new client_1.PrismaClient();
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
+const prisma = new PrismaClient();
 function generateRandom5DigitPassword() {
     return Math.floor(10000 + Math.random() * 90000).toString();
 }

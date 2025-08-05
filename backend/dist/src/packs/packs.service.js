@@ -38,13 +38,13 @@ let PacksService = class PacksService {
         const { travelDate, travelType, packId, nationalCode } = passengerData;
         const userId = req.user?.['sub'];
         if (!userId) {
-            throw new Error('کاربر معتبر نیست');
+            throw new common_1.HttpException('کاربر معتبر نیست', common_1.HttpStatus.UNAUTHORIZED);
         }
         const existingPassenger = await this.prisma.passenger.findUnique({
             where: { nationalCode: nationalCode },
         });
         if (existingPassenger) {
-            throw new Error(`کد ملی ${nationalCode} قبلاً برای مسافر دیگری ثبت شده است.`);
+            throw new common_1.HttpException(`کد ملی ${nationalCode} قبلاً برای مسافر دیگری ثبت شده است.`, common_1.HttpStatus.BAD_REQUEST);
         }
         let pack;
         if (packId) {
@@ -53,7 +53,7 @@ let PacksService = class PacksService {
                 include: { passengers: true },
             });
             if (!pack) {
-                throw new Error('پک یافت نشد');
+                throw new common_1.HttpException('پک یافت نشد', common_1.HttpStatus.NOT_FOUND);
             }
         }
         else {
@@ -82,7 +82,7 @@ let PacksService = class PacksService {
             }
         }
         if (!pack) {
-            throw new Error('ایجاد پک با شکست مواجه شد');
+            throw new common_1.HttpException('ایجاد پک با شکست مواجه شد', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         const passengerDataToCreate = {
             firstName: passengerData.firstName,
@@ -111,7 +111,7 @@ let PacksService = class PacksService {
                 include: { passengers: true, busAssignment: true },
             });
             if (!pack) {
-                throw new Error(`پک با شناسه ${packId} یافت نشد`);
+                throw new common_1.HttpException(`پک با شناسه ${packId} یافت نشد`, common_1.HttpStatus.NOT_FOUND);
             }
             if (status === 'pending') {
                 const existingAssignment = await prisma.busAssignment.findUnique({
@@ -150,7 +150,7 @@ let PacksService = class PacksService {
                     where: { packId: packId },
                 });
                 if (!busAssignment) {
-                    throw new Error('تخصیص اتوبوس برای این پک یافت نشد');
+                    throw new common_1.HttpException('تخصیص اتوبوس برای این پک یافت نشد', common_1.HttpStatus.NOT_FOUND);
                 }
                 const existingFinalConfirmation = await prisma.finalConfirmation.findUnique({
                     where: { packId: packId },
@@ -320,7 +320,7 @@ let PacksService = class PacksService {
                 where: { id: packId },
             });
             if (!pack) {
-                throw new Error('پک یافت نشد');
+                throw new common_1.HttpException('پک یافت نشد', common_1.HttpStatus.NOT_FOUND);
             }
             const newAssignment = await this.prisma.busAssignment.create({
                 data: {
@@ -339,7 +339,10 @@ let PacksService = class PacksService {
                 data: { busAssignmentId: newAssignment.id },
             });
         }
-        return { message: 'اطلاعات اتوبوس با موفقیت ثبت شد' };
+        {
+            message: 'اطلاعات اتوبوس با موفقیت ثبت شد';
+        }
+        ;
     }
 };
 exports.PacksService = PacksService;

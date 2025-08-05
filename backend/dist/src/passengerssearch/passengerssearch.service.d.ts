@@ -4,4 +4,5 @@ export declare class PassengersSearchService {
     private prisma;
     constructor(prisma: PrismaService);
     searchPassengerByNationalCode(nationalCode: string): Promise<PassengerResponse>;
+    private mapSmsStatus;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from '../axiosConfig';
+import { axiosInstance, setLoading } from '../axiosConfig'; // تغییر به named export
 import moment from 'jalali-moment';
 import { FaChevronDown, FaChevronUp, FaFileExcel, FaPrint } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
@@ -53,6 +53,7 @@ const FinalConfirmation = () => {
   const [showSendSMSModal, setShowSendSMSModal] = useState<number | null>(null);
   const [expandedPack, setExpandedPack] = useState<number | null>(null);
   const [smsReport, setSmsReport] = useState<{ count: number; messages: SmsMessage[] } | null>(null);
+  const [loading, setLoadingLocal] = useState(false); // اضافه کردن استیت loading
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -66,7 +67,8 @@ const FinalConfirmation = () => {
   useEffect(() => {
     const fetchPacks = async () => {
       try {
-        const response = await axios.get('/final-confirmation');
+        setLoadingLocal(true); // استفاده از استیت محلی
+        const response = await axiosInstance.get('/final-confirmation');
         console.log('Fetched packs in FinalConfirmation:', response.data);
         if (Array.isArray(response.data)) {
           setPacks(response.data);
@@ -76,8 +78,10 @@ const FinalConfirmation = () => {
         }
       } catch (err: any) {
         console.error('Error fetching packs:', err);
-        alert('خطا در بارگذاری پک‌ها: ' + (err.response?.data?.message || err.message));
+        alert('خطا در بارگذاری پک‌ها: ' + (err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.response?.data?.message || err.message));
         setPacks([]);
+      } finally {
+        setLoadingLocal(false); // استفاده از استیت محلی
       }
     };
 
@@ -98,37 +102,46 @@ const FinalConfirmation = () => {
 
   const fetchSmsReport = async (packId: number) => {
     try {
-      const response = await axios.get(`/sms/report/${packId}`);
+      setLoadingLocal(true); // استفاده از استیت محلی
+      const response = await axiosInstance.get(`/sms/report/${packId}`);
       setSmsReport(response.data);
     } catch (err: any) {
       console.error('Error fetching SMS report:', err);
       setSmsReport({ count: 0, messages: [] });
+    } finally {
+      setLoadingLocal(false); // استفاده از استیت محلی
     }
   };
 
   const handleRevert = async (packId: number) => {
     try {
-      const response = await axios.post(`/packs/previous-stage/${packId}`);
+      setLoadingLocal(true); // استفاده از استیت محلی
+      const response = await axiosInstance.post(`/packs/previous-stage/${packId}`);
       console.log('Revert response:', response.data);
       setPacks((prevPacks) => prevPacks.filter((p) => p.id !== packId));
       setShowReturnConfirm(null);
       navigate('/bus-assignment', { state: { packId } });
     } catch (err: any) {
       console.error('Error reverting pack:', err);
-      alert('خطا در بازگشت به مرحله قبل: ' + (err.response?.data?.message || err.message));
+      alert('خطا در بازگشت به مرحله قبل: ' + (err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.response?.data?.message || err.message));
+    } finally {
+      setLoadingLocal(false); // استفاده از استیت محلی
     }
   };
 
   const handleSendSMS = async (packId: number) => {
     try {
-      const response = await axios.post(`/final-confirmation/send-sms/${packId}`);
+      setLoadingLocal(true); // استفاده از استیت محلی
+      const response = await axiosInstance.post(`/final-confirmation/send-sms/${packId}`);
       console.log('SMS sent response:', response.data);
       alert('پیامک با موفقیت ارسال شد');
       setShowSendSMSModal(null);
       await fetchSmsReport(packId);
     } catch (err: any) {
       console.error('Error sending SMS:', err);
-      alert('خطا در ارسال پیامک: ' + (err.response?.data?.message || err.message));
+      alert('خطا در ارسال پیامک: ' + (err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.response?.data?.message || err.message));
+    } finally {
+      setLoadingLocal(false); // استفاده از استیت محلی
     }
   };
 
@@ -680,6 +693,7 @@ const FinalConfirmation = () => {
                           fetchSmsReport(pack.id);
                         }}
                         className="relative w-full md:w-auto px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-green-800 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center gap-2"
+                        disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
                       >
                         <svg
                           className="w-5 h-5"
@@ -702,18 +716,21 @@ const FinalConfirmation = () => {
                       <button
                         onClick={() => setShowReturnConfirm(pack.id)}
                         className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-300 w-full md:w-auto"
+                        disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
                       >
                         برگشت به مرحله قبل
                       </button>
                       <button
                         onClick={() => generateExcel(pack)}
                         className="relative px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-green-800 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center gap-2 w-full md:w-auto"
+                        disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
                       >
                         <FaFileExcel /> خروجی اکسل
                       </button>
                       <button
                         onClick={() => printPack(pack)}
                         className="relative px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center gap-2 w-full md:w-auto"
+                        disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
                       >
                         <FaPrint /> پرینت
                       </button>
@@ -734,12 +751,14 @@ const FinalConfirmation = () => {
               <button
                 onClick={() => handleRevert(showReturnConfirm)}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
               >
                 بله
               </button>
               <button
                 onClick={() => setShowReturnConfirm(null)}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
               >
                 خیر
               </button>
@@ -777,6 +796,7 @@ const FinalConfirmation = () => {
                 setSmsReport(null);
               }}
               onSend={() => handleSendSMS(showSendSMSModal)}
+              loading={loading} // پاس دادن وضعیت لودینگ به SendSMS
             />
           </div>
         </div>

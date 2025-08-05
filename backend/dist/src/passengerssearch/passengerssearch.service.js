@@ -25,6 +25,10 @@ let PassengersSearchService = class PassengersSearchService {
                     include: {
                         busAssignment: true,
                         finalConfirmation: true,
+                        smsHistory: {
+                            where: { recipientPhone: undefined },
+                            orderBy: { createdAt: 'desc' },
+                        },
                     },
                 },
             },
@@ -39,6 +43,7 @@ let PassengersSearchService = class PassengersSearchService {
         let travelDate = '';
         let returnDate;
         let birthDate;
+        let smsStatus;
         if (passenger.pack) {
             stage = 'in-pack';
             stageText = 'ثبت در پک‌های مسافرتی';
@@ -47,6 +52,10 @@ let PassengersSearchService = class PassengersSearchService {
             travelDate = passenger.travelDate || '';
             returnDate = passenger.returnDate || undefined;
             birthDate = passenger.birthDate || undefined;
+            const latestSms = passenger.pack.smsHistory
+                .filter(sms => sms.recipientPhone === passenger.phone)
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+            smsStatus = latestSms ? this.mapSmsStatus(latestSms.status) : 'تا کنون پیامکی ارسال نشده';
             if (passenger.pack.busAssignment) {
                 stage = 'bus-assigned';
                 stageText = 'تخصیص اتوبوس';
@@ -61,6 +70,7 @@ let PassengersSearchService = class PassengersSearchService {
             returnDate = passenger.returnDate || undefined;
             birthDate = passenger.birthDate || undefined;
             travelType = passenger.travelType;
+            smsStatus = 'تا کنون پیامکی ارسال نشده';
         }
         return {
             id: passenger.id,
@@ -75,7 +85,20 @@ let PassengersSearchService = class PassengersSearchService {
             travelDate,
             returnDate,
             birthDate,
+            smsStatus,
         };
+    }
+    mapSmsStatus(status) {
+        switch (status.toLowerCase()) {
+            case 'sent':
+                return 'ارسال شده اما هنوز نرسیده';
+            case 'success':
+                return 'ارسال شده و رسیده';
+            case 'failed':
+                return 'ارسال با خطا مواجه شده';
+            default:
+                return 'تا کنون پیامکی ارسال نشده';
+        }
     }
 };
 exports.PassengersSearchService = PassengersSearchService;

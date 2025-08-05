@@ -6,6 +6,12 @@ export declare class BusAssignmentController {
     private readonly packsService;
     constructor(busAssignmentService: BusAssignmentService, packsService: PacksService);
     findAllWithPassengers(): Promise<({
+        busAssignment: {
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
+        } | null;
         passengers: {
             id: number;
             createdAt: Date;
@@ -23,12 +29,6 @@ export declare class BusAssignmentController {
             leaderPhone: string | null;
             createdById: number;
         }[];
-        busAssignment: {
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
-        } | null;
     } & {
         id: number;
         createdAt: Date;
@@ -52,6 +52,16 @@ export declare class BusAssignmentController {
     moveToNextStage(packId: number, status: 'pending' | 'assigned' | 'confirmed'): Promise<{
         message: string;
         updatedPack: {
+            busAssignment: {
+                id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
+                packId: number;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
+            } | null;
             passengers: {
                 id: number;
                 createdAt: Date;
@@ -69,16 +79,6 @@ export declare class BusAssignmentController {
                 leaderPhone: string | null;
                 createdById: number;
             }[];
-            busAssignment: {
-                id: number;
-                travelDate: Date;
-                type: import(".prisma/client").$Enums.PackType;
-                packId: number;
-                company: string;
-                plate: string;
-                driver: string;
-                driverPhone: string;
-            } | null;
         } & {
             id: number;
             createdAt: Date;
@@ -94,6 +94,16 @@ export declare class BusAssignmentController {
     moveToPreviousStage(packId: number): Promise<{
         message: string;
         updatedPack: {
+            busAssignment: {
+                id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
+                packId: number;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
+            } | null;
             passengers: {
                 id: number;
                 createdAt: Date;
@@ -111,16 +121,6 @@ export declare class BusAssignmentController {
                 leaderPhone: string | null;
                 createdById: number;
             }[];
-            busAssignment: {
-                id: number;
-                travelDate: Date;
-                type: import(".prisma/client").$Enums.PackType;
-                packId: number;
-                company: string;
-                plate: string;
-                driver: string;
-                driverPhone: string;
-            } | null;
         } & {
             id: number;
             createdAt: Date;

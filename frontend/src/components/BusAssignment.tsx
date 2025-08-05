@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from '../axiosConfig';
+import { axiosInstance, setLoading } from '../axiosConfig';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import moment from 'jalali-moment';
 
@@ -55,7 +55,8 @@ const BusAssignment = () => {
 
   const fetchPacks = async () => {
     try {
-      const response = await axios.get('/bus-assignment/packs/bus-assignment');
+      setLoading(true);
+      const response = await axiosInstance.get('/bus-assignment/packs/bus-assignment');
       console.log('Fetched packs from /bus-assignment/packs/bus-assignment:', response.data);
       setPacks(response.data);
       const initialFormData: { [packId: number]: BusAssignment } = {};
@@ -68,8 +69,10 @@ const BusAssignment = () => {
       return response.data;
     } catch (err: any) {
       console.error('Error fetching packs:', err);
-      alert('خطا در بارگذاری پک‌ها: ' + (err.response?.data?.message || err.message || 'خطایی رخ داده است'));
+      alert('خطا در بارگذاری پک‌ها: ' + (err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.response?.data?.message || err.message || 'خطایی رخ داده است'));
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +100,7 @@ const BusAssignment = () => {
       },
     }));
   };
+
   const handlePlateChange = (
     packId: number,
     part: 'first' | 'letter' | 'second',
@@ -160,10 +164,9 @@ const BusAssignment = () => {
 
   const saveBusAssignment = async (packId: number) => {
     const assignmentData = formData[packId];
-    // تابع validateForm خودش خطاها رو مدیریت می‌کنه، پس شرط اضافی لازم نیست
     try {
       console.log('Sending assignment data to /bus-assignment/:packId:', assignmentData);
-      const response = await axios.post(`/packs/bus-assignment/${packId}`, { // اصلاح مسیر endpoint
+      const response = await axiosInstance.post(`/packs/bus-assignment/${packId}`, {
         company: assignmentData.company,
         plate: assignmentData.plate,
         driver: assignmentData.driver,
@@ -186,7 +189,7 @@ const BusAssignment = () => {
     const isValid = validateForm(packId);
     if (!isValid) {
       console.log('Form validation failed:', errors[packId]);
-      return; // اگر فرم معتبر نباشه، ادامه نده
+      return;
     }
     try {
       const response = await saveBusAssignment(packId);
@@ -200,9 +203,10 @@ const BusAssignment = () => {
       }
     } catch (err: any) {
       console.error('Error during submission:', err);
-      alert('خطا در ثبت اطلاعات اتوبوس: ' + (err.message || 'خطایی رخ داده است'));
+      alert('خطا در ثبت اطلاعات اتوبوس: ' + (err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.message || 'خطایی رخ داده است'));
     }
   };
+
   const handleNextStage = async (packId: number) => {
     try {
       const pack = packs.find((p) => p.id === packId);
@@ -210,7 +214,7 @@ const BusAssignment = () => {
         throw new Error('پک یافت نشد');
       }
 
-      const response = await axios.post(`/bus-assignment/${packId}/move-to-next-stage`, { status: 'confirmed' }, {
+      const response = await axiosInstance.post(`/bus-assignment/${packId}/move-to-next-stage`, { status: 'confirmed' }, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -218,7 +222,7 @@ const BusAssignment = () => {
       });
       console.log('Moved to next stage response:', response.data);
       await fetchPacks();
-      navigate('/final-confirmation', { state: { pack: response.data } }); // فرض می‌کنم پاسخ شامل خود پک به‌روز‌شده است
+      navigate('/final-confirmation', { state: { pack: response.data } });
     } catch (err: any) {
       console.error('Error moving to next stage:', err);
       alert('خطا در ارسال به مرحله بعدی: ' + (err.response?.data?.message || err.message || 'خطایی رخ داده است'));
@@ -229,7 +233,7 @@ const BusAssignment = () => {
 
   const handlePreviousStage = async (packId: number) => {
     try {
-      const response = await axios.post(`/bus-assignment/${packId}/previous-stage`, {}, {
+      const response = await axiosInstance.post(`/bus-assignment/${packId}/previous-stage`, {}, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

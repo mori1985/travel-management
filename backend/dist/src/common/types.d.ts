@@ -11,4 +11,5 @@ export interface PassengerResponse {
     travelDate: string;
     returnDate?: string;
     birthDate?: string;
+    smsStatus?: string;
 }

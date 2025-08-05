@@ -11,4 +11,5 @@ export interface PassengerResponse {
   travelDate: string; // تاریخ رفت
   returnDate?: string; // تاریخ برگشت
   birthDate?: string; // تاریخ تولد
+  smsStatus?: string; // وضعیت پیامک
 }

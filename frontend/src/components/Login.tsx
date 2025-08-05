@@ -1,5 +1,5 @@
-import { useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useContext, useEffect } from 'react';
+import { axiosInstance } from '../axiosConfig'; // استفاده از axiosInstance به‌جای axios
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -19,7 +19,7 @@ const Login = () => {
     }
   }, [location.search]);
 
-  const decodeToken = (token) => {
+  const decodeToken = (token: string) => {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -36,16 +36,13 @@ const Login = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Sending login request:', { username, password });
     try {
-      const response = await axios.post('http://localhost:3001/auth/login', {
+      const response = await axiosInstance.post('/auth/login', {
         username,
         password,
-      }, {
-        headers: { 'Content-Type': 'application/json' },
-        withCredentials: true,
       });
       console.log('Login response:', JSON.stringify(response.data, null, 2));
       const token = response.data.access_token;
@@ -64,9 +61,9 @@ const Login = () => {
       } else {
         navigate('/');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err.response?.data || err.message);
-      setError(`ورود ناموفق: ${err.response?.data?.message || err.message}`);
+      setError(`ورود ناموفق: ${err.response?.data?.message || err.message || 'مشکلی رخ داده است. لطفاً دوباره امتحان کنید.'}`);
     }
   };
 
@@ -87,11 +84,11 @@ const Login = () => {
       <div
         className="p-8 rounded-xl shadow-2xl w-full max-w-md z-10 transform transition-all hover:scale-105 animate-fade-in"
         style={{
-          backgroundColor: 'rgba(230, 240, 250, 0.3)', // همرنگ با بک‌گراند (آبی روشن شفاف)
-          backdropFilter: 'blur(5px)', // افکت محو
-          WebkitBackdropFilter: 'blur(5px)', // پشتیبانی برای مرورگرهای وب‌کیت
-          border: '1px solid rgba(255, 255, 255, 0.3)', // حاشیه ملایم
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', // سایه نرم
+          backgroundColor: 'rgba(230, 240, 250, 0.3)',
+          backdropFilter: 'blur(5px)',
+          WebkitBackdropFilter: 'blur(5px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
         }}
       >
         <h2 className="text-4xl font-bold mb-6 text-center text-blue-700">ورود به سیستم</h2>

@@ -3,6 +3,16 @@ export declare class FinalConfirmationController {
     private readonly finalConfirmationService;
     constructor(finalConfirmationService: FinalConfirmationService);
     findAllWithPassengers(): Promise<({
+        busAssignment: {
+            id: number;
+            travelDate: Date;
+            type: import(".prisma/client").$Enums.PackType;
+            packId: number;
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
+        } | null;
         passengers: {
             id: number;
             createdAt: Date;
@@ -20,16 +30,6 @@ export declare class FinalConfirmationController {
             leaderPhone: string | null;
             createdById: number;
         }[];
-        busAssignment: {
-            id: number;
-            travelDate: Date;
-            type: import(".prisma/client").$Enums.PackType;
-            packId: number;
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
-        } | null;
     } & {
         id: number;
         createdAt: Date;
@@ -44,6 +44,16 @@ export declare class FinalConfirmationController {
     revertToPreviousStage(packId: number): Promise<{
         message: string;
         updatedPack: {
+            busAssignment: {
+                id: number;
+                travelDate: Date;
+                type: import(".prisma/client").$Enums.PackType;
+                packId: number;
+                company: string;
+                plate: string;
+                driver: string;
+                driverPhone: string;
+            } | null;
             passengers: {
                 id: number;
                 createdAt: Date;
@@ -61,16 +71,6 @@ export declare class FinalConfirmationController {
                 leaderPhone: string | null;
                 createdById: number;
             }[];
-            busAssignment: {
-                id: number;
-                travelDate: Date;
-                type: import(".prisma/client").$Enums.PackType;
-                packId: number;
-                company: string;
-                plate: string;
-                driver: string;
-                driverPhone: string;
-            } | null;
         } & {
             id: number;
             createdAt: Date;

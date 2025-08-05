@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -10,14 +11,12 @@ import CreateNormalPassenger from './components/CreateNormalPassenger';
 import CreateVipPassenger from './components/CreateVipPassenger';
 import CreatePack from './components/CreatePack';
 import CreateBus from './components/CreateBus';
-import ErrorBoundary from './components/ErrorBoundary'; // اضافه کردن ErrorBoundary
+import ErrorBoundary from './components/ErrorBoundary';
 import BusAssignment from './components/BusAssignment';
 import FinalConfirmation from './components/FinalConfirmation';
 import AdminReport from './components/AdminReport';
 import SendSMS from './components/SendSMS';
 import SmsReport from './components/SmsReport';
-
-
 
 const AppContent = () => {
   const { token, setToken } = useAuth();
@@ -26,8 +25,10 @@ const AppContent = () => {
   useEffect(() => {
     const handleTokenExpired = () => {
       if (token) {
+        console.log('Token expired, logging out...');
         setToken(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('role');
         window.location.href = '/login?message=' + encodeURIComponent('توکن منقضی شده است. لطفاً دوباره وارد شوید.');
       }
     };
@@ -40,7 +41,7 @@ const AppContent = () => {
   }, [token, setToken]);
 
   return (
-    <ErrorBoundary> {/* اضافه کردن ErrorBoundary */}
+    <ErrorBoundary>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
@@ -69,11 +70,20 @@ const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
+        <ErrorBoundary> {/* ErrorBoundary دور Navbar هم اضافه شد */}
+          <Navbar />
+        </ErrorBoundary>
         <AppContent />
       </BrowserRouter>
     </AuthProvider>
   );
 };
+
+// رندر اصلی
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
 
 export default App;

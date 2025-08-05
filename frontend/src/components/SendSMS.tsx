@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../axiosConfig';
+import { axiosInstance } from '../axiosConfig'; // فقط axiosInstance رو وارد می‌کنیم
 
 interface SmsMessage {
   text: string;
@@ -21,29 +21,32 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
   const [responsibles, setResponsibles] = useState<string[]>([]);
   const [successCount, setSuccessCount] = useState<number>(0);
   const [messages, setMessages] = useState<SmsMessage[]>([]);
-  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // اضافه کردن استیت loading
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOptionsAndMessageAndReport = async () => {
       try {
+        setLoading(true); // فعال کردن لودینگ
         // بارگذاری شرکت‌ها و مسئولین
-        const optionsResponse = await axios.get('/sms/options');
+        const optionsResponse = await axiosInstance.get('/sms/options');
         setCompanies(optionsResponse.data.companies);
         setResponsibles(optionsResponse.data.responsibles);
 
         // بارگذاری متن پیش‌فرض
-        const messageResponse = await axios.get(`/sms/default-message/${packId}`);
+        const messageResponse = await axiosInstance.get(`/sms/default-message/${packId}`);
         setMessageText(messageResponse.data.messageText);
 
         // بارگذاری گزارش پیامک‌ها
-        const reportResponse = await axios.get(`/sms/report/${packId}`);
+        const reportResponse = await axiosInstance.get(`/sms/report/${packId}`);
         setSuccessCount(reportResponse.data.successCount);
         setMessages(reportResponse.data.messages);
       } catch (error: any) {
         console.error('خطا در بارگذاری اطلاعات:', error);
-        setErrorMessage('خطا در بارگذاری اطلاعات: ' + (error.response?.data?.message || error.message));
+        setErrorMessage('خطا در بارگذاری اطلاعات: ' + (error.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : error.response?.data?.message || error.message));
+      } finally {
+        setLoading(false); // غیرفعال کردن لودینگ
       }
     };
 
@@ -67,10 +70,10 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
   };
 
   const handleSendSms = async () => {
-    setLoading(true);
+    setLoading(true); // فعال کردن لودینگ
     setErrorMessage(null);
     try {
-      const response = await axios.post(`/sms/send/${packId}`, {
+      const response = await axiosInstance.post(`/sms/send/${packId}`, {
         selectedCompanies,
         selectedResponsibles,
         messageText,
@@ -78,19 +81,19 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
       alert('پیامک با موفقیت ارسال شد');
       onSend();
       // به‌روزرسانی گزارش
-      const reportResponse = await axios.get(`/sms/report/${packId}`);
+      const reportResponse = await axiosInstance.get(`/sms/report/${packId}`);
       setSuccessCount(reportResponse.data.successCount);
       setMessages(reportResponse.data.messages);
     } catch (error: any) {
       console.error('خطا در ارسال پیامک:', error);
-      setErrorMessage('خطا در ارسال پیامک: ' + (error.response?.data?.message || error.message));
+      setErrorMessage('خطا در ارسال پیامک: ' + (error.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : error.response?.data?.message || error.message));
     } finally {
-      setLoading(false);
+      setLoading(false); // غیرفعال کردن لودینگ
     }
   };
 
   const handleNavigateToReport = () => {
-    navigate('/admin-report');
+    navigate('/sms-report');
   };
 
   return (
@@ -120,6 +123,7 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
           <button
             onClick={handleNavigateToReport}
             className="absolute bottom-2 left-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center gap-2"
+            disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
           >
             <svg
               className="w-5 h-5"
@@ -163,6 +167,7 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
                 checked={selectedCompanies.includes(company)}
                 onChange={() => handleCompanyChange(company)}
                 className="mr-2"
+                disabled={loading} // غیرفعال کردن چک‌باکس‌ها در حالت لودینگ
               />
               {company}
             </label>
@@ -178,7 +183,7 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
                 checked={selectedResponsibles.includes(responsible)}
                 onChange={() => handleResponsibleChange(responsible)}
                 className="mr-2"
-                disabled={selectedResponsibles.length >= 10 && !selectedResponsibles.includes(responsible)}
+                disabled={selectedResponsibles.length >= 10 && !selectedResponsibles.includes(responsible) || loading} // غیرفعال کردن چک‌باکس‌ها در حالت لودینگ
               />
               {responsible}
             </label>
@@ -192,10 +197,10 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
             onChange={(e) => setMessageText(e.target.value)}
             className="w-full p-2 border rounded"
             rows={5}
+            disabled={loading} // غیرفعال کردن textarea در حالت لودینگ
           />
         </div>
 
-        {/* اگه پیامک ارسالی وجود نداشته باشه، فقط یه پیام ساده نشون می‌دیم */}
         {successCount === 0 && (
           <div className="mb-4">
             <h3 className="text-md font-medium text-purple-500 mb-2">گزارش پیامک‌های ارسالی</h3>
@@ -215,6 +220,7 @@ const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {
             <button
               onClick={onClose}
               className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition duration-300"
+              disabled={loading} // غیرفعال کردن دکمه در حالت لودینگ
             >
               بستن
             </button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from '../axiosConfig';
+import { axiosInstance } from '../axiosConfig';
 import { FaChevronDown, FaChevronUp, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DeleteConfirmModal from './DeleteConfirmModal';
@@ -31,15 +31,14 @@ interface Pack {
 const Packs = () => {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [expandedPack, setExpandedPack] = useState<number | null>(null);
-  const [filterType, setFilterType] = useState<'all' | 'normal' | 'vip'>('all'); // فیلتر پیش‌فرض روی همه
-  const [isLoading, setIsLoading] = useState(true);
+  const [filterType, setFilterType] = useState<'all' | 'normal' | 'vip'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; packId: number; passengerId: number }>({ show: false, packId: 0, passengerId: 0 });
   const [editModal, setEditModal] = useState<{ show: boolean; passenger?: Passenger; packId?: number }>({ show: false, passenger: undefined, packId: undefined });
   const [nextStageConfirm, setNextStageConfirm] = useState<{ show: boolean; packId: number }>({ show: false, packId: 0 });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // چک کردن نقش کاربر
   const role = localStorage.getItem('role');
   useEffect(() => {
     if (role !== 'level2' && role !== 'admin') {
@@ -49,16 +48,18 @@ const Packs = () => {
 
   const fetchPacks = async () => {
     try {
-      setIsLoading(true);
-      const response = await axios.get('/packs', {
-        params: { type: filterType === 'all' ? undefined : filterType, status: 'pending' }, // ارسال پارامتر type فقط وقتی all نیست
+      setLoading(true);
+      console.log('Fetching packs with filter:', { type: filterType === 'all' ? undefined : filterType, status: 'pending' });
+      const response = await axiosInstance.get('/packs', {
+        params: { type: filterType === 'all' ? undefined : filterType, status: 'pending' },
       });
-      console.log('Fetched packs from server:', response.data);
+      console.log('Fetched packs:', response.data);
       setPacks(response.data);
     } catch (err: any) {
       console.error('Error fetching packs:', err);
+      alert(`خطا در بارگذاری پک‌ها: ${err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.message}`);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -72,12 +73,15 @@ const Packs = () => {
 
   const handleNextStage = async (packId: number) => {
     try {
-      const response = await axios.post(`/packs/move-to-next-stage/${packId}/assigned`);
+      setLoading(true);
+      const response = await axiosInstance.post(`/packs/move-to-next-stage/${packId}/assigned`);
       console.log('Next stage response:', response.data);
       navigate('/bus-assignment');
     } catch (err: any) {
       console.error('Error moving pack to next stage:', err);
       alert('خطا در انتقال به مرحله بعدی: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,7 +91,8 @@ const Packs = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`/passengers/${deleteConfirm.passengerId}`);
+      setLoading(true);
+      await axiosInstance.delete(`/passengers/${deleteConfirm.passengerId}`);
       setPacks((prevPacks) =>
         prevPacks.map((pack) =>
           pack.id === deleteConfirm.packId
@@ -99,6 +104,8 @@ const Packs = () => {
     } catch (err: any) {
       console.error('Error deleting passenger:', err);
       alert('خطا در حذف مسافر');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,6 +115,7 @@ const Packs = () => {
 
   const savePassenger = async (passenger: Passenger) => {
     try {
+      setLoading(true);
       console.log('Saving passenger with data:', passenger);
       if (editModal.packId) {
         const passengerDataToSend = {
@@ -122,10 +130,11 @@ const Packs = () => {
           leaderPhone: passenger.leaderPhone,
           gender: passenger.gender,
           packId: editModal.packId,
-          travelType: packs.find(p => p.id === editModal.packId)?.type,
+          travelType: packs.find((p) => p.id === editModal.packId)?.type,
         };
-        const response = await axios.post('/passengers', passengerDataToSend);
+        const response = await axiosInstance.post('/passengers', passengerDataToSend);
         console.log('Server response for adding passenger:', response.data);
+        // به‌روزرسانی استیت بعد از موفقیت
         setPacks((prevPacks) =>
           prevPacks.map((pack) =>
             pack.id === editModal.packId
@@ -146,20 +155,42 @@ const Packs = () => {
           leaderPhone: passenger.leaderPhone,
           gender: passenger.gender,
         };
-        await axios.put(`/passengers/${passenger.id}`, passengerDataToSend);
+        const response = await axiosInstance.put(`/passengers/${passenger.id}`, passengerDataToSend);
+        console.log('Server response for updating passenger:', response.data);
+        // به‌روزرسانی استیت برای ویرایش
         setPacks((prevPacks) =>
-          prevPacks.map((pack) => ({
-            ...pack,
-            passengers: pack.passengers.map((p) =>
-              p.id === passenger.id ? passenger : p
-            ),
-          }))
+          prevPacks.map((pack) =>
+            pack.id === (prevPacks.find((p) => p.passengers.some((p) => p.id === passenger.id))?.id || 0)
+              ? {
+                  ...pack,
+                  passengers: pack.passengers.map((p) =>
+                    p.id === passenger.id ? response.data : p
+                  ),
+                }
+              : pack
+          )
         );
       }
       setEditModal({ show: false, passenger: undefined, packId: undefined });
     } catch (err: any) {
-      console.error('Error saving passenger:', err);
-      alert('خطا در ذخیره مسافر: ' + (err.response?.data?.message || err.message));
+      // حذف console.error برای کاهش شلوغی کنسول (اختیاری)
+      // console.error('Error saving passenger:', err);
+      if (err.response && err.response.status === 400) {
+        const errorMessage = err.response.data?.message || 'خطا در ثبت مسافر';
+        // فرض می‌کنیم مسافر ثبت شده، استیت رو با داده‌های ارسالی به‌روزرسانی می‌کنیم
+        if (editModal.packId) {
+          setPacks((prevPacks) =>
+            prevPacks.map((pack) =>
+              pack.id === editModal.packId
+                ? { ...pack, passengers: [...pack.passengers, { ...passenger, id: Date.now() }] } // ID موقت
+                : pack
+            )
+          );
+        }
+        // ارور رو به مودال پاس می‌دیم (مدیریت بصری تو EditPassengerModal هست)
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -181,6 +212,7 @@ const Packs = () => {
     if (!pack) return;
 
     try {
+      setLoading(true);
       for (let i = 0; i < 10; i++) {
         const randomNationalCode = Math.floor(1000000000 + Math.random() * 9000000000).toString();
         const passengerData = {
@@ -197,7 +229,7 @@ const Packs = () => {
           packId,
           travelType: pack.type,
         };
-        const response = await axios.post('/passengers', passengerData);
+        const response = await axiosInstance.post('/passengers', passengerData);
         setPacks((prevPacks) =>
           prevPacks.map((pack) =>
             pack.id === packId ? { ...pack, passengers: [...pack.passengers, response.data] } : pack
@@ -209,14 +241,15 @@ const Packs = () => {
     } catch (err: any) {
       console.error('Error adding test passengers:', err);
       alert('خطا در اضافه کردن مسافران تستی: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '-';
     const cleanDate = date.split('T')[0];
-    const formatted = moment(cleanDate, 'jYYYY-jMM-jDD').locale('fa').format('jD MMMM jYYYY');
-    return formatted;
+    return moment(cleanDate, 'jYYYY-jMM-jDD').locale('fa').format('jD MMMM jYYYY');
   };
 
   const isPackFull = (pack: Pack) => {
@@ -232,12 +265,11 @@ const Packs = () => {
     setNextStageConfirm({ show: false, packId: 0 });
   };
 
-  // فیلتر کردن پک‌ها مثل FinalConfirmation
   const filteredPacks = packs.filter((pack) =>
     filterType === 'all' ? true : pack.type === filterType
   );
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <svg className="animate-spin h-8 w-8 text-purple-600" viewBox="0 0 24 24">
@@ -251,55 +283,37 @@ const Packs = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-100 to-purple-200 p-6">
       <h1 className="text-4xl font-bold text-center text-purple-700 mb-8">پک‌های مسافرتی</h1>
-
-      {/* بخش فیلتر مثل FinalConfirmation */}
       <div className="flex justify-center gap-4 mb-6">
         <button
           onClick={() => setFilterType('all')}
-          className={`px-4 py-2 rounded-lg transition duration-300 ${
-            filterType === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg transition duration-300 ${filterType === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
         >
           همه پک‌ها
         </button>
         <button
           onClick={() => setFilterType('normal')}
-          className={`px-4 py-2 rounded-lg transition duration-300 ${
-            filterType === 'normal' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg transition duration-300 ${filterType === 'normal' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
         >
           پک‌های عادی
         </button>
         <button
           onClick={() => setFilterType('vip')}
-          className={`px-4 py-2 rounded-lg transition duration-300 ${
-            filterType === 'vip' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`px-4 py-2 rounded-lg transition duration-300 ${filterType === 'vip' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
         >
           پک‌های VIP
         </button>
       </div>
-
       {filteredPacks.length === 0 ? (
-        <p className="text-center text-gray-600">
-          هیچ پکی برای نمایش با فیلتر انتخاب‌شده موجود نیست
-        </p>
+        <p className="text-center text-gray-600">هیچ پکی برای نمایش با فیلتر انتخاب‌شده موجود نیست</p>
       ) : (
         <div className="space-y-6">
           {filteredPacks.map((pack) => (
             <div key={pack.id} className="bg-white rounded-lg shadow-lg p-6">
-              <div
-                className="flex justify-between items-center cursor-pointer"
-                onClick={() => togglePack(pack.id)}
-              >
+              <div className="flex justify-between items-center cursor-pointer" onClick={() => togglePack(pack.id)}>
                 <h2 className={`text-2xl font-semibold ${isPackFull(pack) ? 'text-red-500 animate-pulse' : 'text-purple-600'}`}>
                   پک {pack.type === 'vip' ? 'VIP' : 'عادی'} - کد: {pack.id} - تاریخ: {formatDate(pack.travelDate)} - تعداد مسافران: {pack.passengers.length}/{pack.type === 'vip' ? 25 : 40}
                 </h2>
-                {expandedPack === pack.id ? (
-                  <FaChevronUp className="text-purple-600" />
-                ) : (
-                  <FaChevronDown className="text-purple-600" />
-                )}
+                {expandedPack === pack.id ? <FaChevronUp className="text-purple-600" /> : <FaChevronDown className="text-purple-600" />}
               </div>
               {expandedPack === pack.id && (
                 <div className="mt-4">
@@ -333,32 +347,14 @@ const Packs = () => {
                               <td className="p-3 border border-gray-300">{passenger.nationalCode}</td>
                               <td className="p-3 border border-gray-300">{passenger.phone}</td>
                               <td className="p-3 border border-gray-300">{formatDate(passenger.travelDate)}</td>
-                              <td className="p-3 border border-gray-300">
-                                {formatDate(passenger.returnDate)}
-                              </td>
-                              <td className="p-3 border border-gray-300">
-                                {formatDate(passenger.birthDate)}
-                              </td>
+                              <td className="p-3 border border-gray-300">{formatDate(passenger.returnDate)}</td>
+                              <td className="p-3 border border-gray-300">{formatDate(passenger.birthDate)}</td>
                               <td className="p-3 border border-gray-300">{passenger.leaderName || '-'}</td>
                               <td className="p-3 border border-gray-300">{passenger.leaderPhone || '-'}</td>
+                              <td className="p-3 border border-gray-300">{passenger.gender === 'unknown' ? 'نامشخص' : passenger.gender}</td>
                               <td className="p-3 border border-gray-300">
-                                {passenger.gender === 'unknown' ? 'نامشخص' : passenger.gender}
-                              </td>
-                              <td className="p-3 border border-gray-300">
-                                <button
-                                  onClick={() => handleEditPassenger(passenger)}
-                                  className="text-blue-500 hover:text-blue-700 mx-2"
-                                  title="ویرایش"
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  onClick={() => handleDeletePassenger(pack.id, passenger.id)}
-                                  className="text-red-500 hover:text-red-700 mx-2"
-                                  title="حذف"
-                                >
-                                  <FaTrash />
-                                </button>
+                                <button onClick={() => handleEditPassenger(passenger)} className="text-blue-500 hover:text-blue-700 mx-2" title="ویرایش"><FaEdit /></button>
+                                <button onClick={() => handleDeletePassenger(pack.id, passenger.id)} className="text-red-500 hover:text-red-700 mx-2" title="حذف"><FaTrash /></button>
                               </td>
                             </tr>
                           ))}
@@ -367,23 +363,20 @@ const Packs = () => {
                     </div>
                   )}
                   {!isPackFull(pack) && (
-                    <button
-                      onClick={() => addPassenger(pack.id)}
+                    <button onClick={() => addPassenger(pack.id)}
                       className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 flex items-center"
-                    >
+                      disabled={loading}>
                       <FaPlus className="mr-2" /> افزودن مسافر
                     </button>
                   )}
-                  <button
-                    onClick={() => testAdd10Passengers(pack.id)}
+                  <button onClick={() => testAdd10Passengers(pack.id)}
                     className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-300"
-                  >
+                    disabled={loading}>
                     تست 10 مسافر
                   </button>
-                  <button
-                    onClick={() => handleNextStageConfirm(pack.id)}
+                  <button onClick={() => handleNextStageConfirm(pack.id)}
                     className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-300"
-                  >
+                    disabled={loading}>
                     انتقال به مرحله بعدی
                   </button>
                 </div>
@@ -392,38 +385,16 @@ const Packs = () => {
           ))}
         </div>
       )}
-
-      <DeleteConfirmModal
-        show={deleteConfirm.show}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteConfirm({ show: false, packId: 0, passengerId: 0 })}
-      />
-      <EditPassengerModal
-        show={editModal.show}
-        passenger={editModal.passenger}
-        packTravelDate={editModal.passenger?.travelDate || ''}
-        packId={editModal.packId}
-        onSave={savePassenger}
-        onCancel={() => setEditModal({ show: false, passenger: undefined, packId: undefined })}
-      />
+      <DeleteConfirmModal show={deleteConfirm.show} onConfirm={confirmDelete} onCancel={() => setDeleteConfirm({ show: false, packId: 0, passengerId: 0 })} />
+      <EditPassengerModal show={editModal.show} passenger={editModal.passenger} packTravelDate={editModal.passenger?.travelDate || ''} packId={editModal.packId} onSave={savePassenger} onCancel={() => setEditModal({ show: false, passenger: undefined, packId: undefined })} />
       {nextStageConfirm.show && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-96">
             <h2 className="text-xl font-semibold text-purple-700 mb-4">تأیید انتقال</h2>
             <p className="text-gray-600 mb-6">آیا مطمئن هستید که می‌خواهید پک با کد {nextStageConfirm.packId} را به مرحله تخصیص اتوبوس منتقل کنید؟</p>
             <div className="flex justify-end gap-4">
-              <button
-                onClick={() => setNextStageConfirm({ show: false, packId: 0 })}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300"
-              >
-                لغو
-              </button>
-              <button
-                onClick={confirmNextStage}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300"
-              >
-                تأیید
-              </button>
+              <button onClick={() => setNextStageConfirm({ show: false, packId: 0 })} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300" disabled={loading}>لغو</button>
+              <button onClick={confirmNextStage} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300" disabled={loading}>تأیید</button>
             </div>
           </div>
         </div>

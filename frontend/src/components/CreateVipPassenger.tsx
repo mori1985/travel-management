@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from '../axiosConfig';
+import { axiosInstance, setLoading } from '../axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { FaUserPlus } from 'react-icons/fa';
 import DateSelector from './DateSelector';
@@ -33,60 +33,41 @@ const CreateVipPassenger = () => {
     general: '',
   });
   const [nationalCodeError, setNationalCodeError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // اضافه کردن isLoading
   const navigate = useNavigate();
 
   const validateField = (name: string, value: string) => {
     switch (name) {
       case 'firstName':
-        if (value.length < 3) {
-          return 'نام باید حداقل ۳ حرف باشد';
-        }
+        if (value.length < 3) return 'نام باید حداقل ۳ حرف باشد';
         return '';
       case 'lastName':
-        if (value.length < 3) {
-          return 'نام خانوادگی باید حداقل ۳ حرف باشد';
-        }
+        if (value.length < 3) return 'نام خانوادگی باید حداقل ۳ حرف باشد';
         return '';
       case 'nationalCode':
-        if (!/^\d{10}$/.test(value)) {
-          return 'کد ملی باید دقیقاً ۱۰ رقم باشد';
-        }
+        if (!/^\d{10}$/.test(value)) return 'کد ملی باید دقیقاً ۱۰ رقم باشد';
         return '';
       case 'mobile':
-        if (!/^09\d{9}$/.test(value)) {
-          return 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد';
-        }
+        if (!/^09\d{9}$/.test(value)) return 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد';
         return '';
       case 'departureDate':
-        if (!value) {
-          return 'تاریخ رفت الزامی است';
-        }
+        if (!value) return 'تاریخ رفت الزامی است';
         return '';
       case 'birthDate':
-        if (!value) {
-          return 'تاریخ تولد الزامی است';
-        }
+        if (!value) return 'تاریخ تولد الزامی است';
         return '';
       case 'gender':
-        if (!value) {
-          return 'جنسیت الزامی است';
-        }
+        if (!value) return 'جنسیت الزامی است';
         return '';
       case 'guardianFirstName':
-        if (value && value.length < 3) {
-          return 'نام سرپرست باید حداقل ۳ حرف باشد';
-        }
+        if (value && value.length < 3) return 'نام سرپرست باید حداقل ۳ حرف باشد';
         return '';
       case 'guardianLastName':
-        if (value && value.length < 3) {
-          return 'نام خانوادگی سرپرست باید حداقل ۳ حرف باشد';
-        }
+        if (value && value.length < 3) return 'نام خانوادگی سرپرست باید حداقل ۳ حرف باشد';
         return '';
       case 'guardianMobile':
-        if (value && !/^09\d{9}$/.test(value)) {
-          return 'شماره موبایل سرپرست باید با ۰۹ شروع شود و ۱۱ رقم باشد';
-        }
+        if (value && !/^09\d{9}$/.test(value)) return 'شماره موبایل سرپرست باید با ۰۹ شروع شود و ۱۱ رقم باشد';
         return '';
       default:
         return '';
@@ -110,7 +91,7 @@ const CreateVipPassenger = () => {
       return false;
     }
     try {
-      const response = await axios.get(`/passengers/check-national-code/${nationalCode}`);
+      const response = await axiosInstance.get(`/passengers/check-national-code/${nationalCode}`);
       if (response.data.exists) {
         setNationalCodeError('این کد ملی قبلاً ثبت شده است');
         return false;
@@ -118,6 +99,7 @@ const CreateVipPassenger = () => {
       setNationalCodeError('');
       return true;
     } catch (err: any) {
+      console.error('National code validation error:', err);
       setNationalCodeError('خطا در بررسی کد ملی');
       return false;
     }
@@ -141,20 +123,13 @@ const CreateVipPassenger = () => {
     };
     setErrors(newErrors);
 
-    if (Object.values(newErrors).some((error) => error !== '')) {
-      return;
-    }
+    if (Object.values(newErrors).some((error) => error !== '')) return;
 
     if (!(await validateNationalCode(formData.nationalCode))) return;
 
-    setIsLoading(true);
+    setIsLoading(true); // استفاده از isLoading
     try {
-      console.log('Sending to server:', {
-        travelDate: formData.departureDate,
-        returnDate: formData.returnDate,
-        birthDate: formData.birthDate,
-      }); // لاگ قبل از ارسال
-      const response = await axios.post('/passengers', {
+      const response = await axiosInstance.post('/passengers', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         nationalCode: formData.nationalCode,
@@ -167,12 +142,17 @@ const CreateVipPassenger = () => {
         leaderPhone: formData.guardianMobile,
         gender: formData.gender,
       });
-      console.log('Response from server:', response.data); // لاگ پاسخ سرور
-      navigate('/packs');
+      console.log('Passenger created:', response.data);
+      setSuccess('مسافر با موفقیت ثبت شد!');
+      setTimeout(() => navigate('/packs'), 2000); // ریدایرکت بعد از ۲ ثانیه
     } catch (err: any) {
-      setErrors({ ...errors, general: `خطا در ثبت: ${err.response?.data?.message || err.message}` });
+      console.error('Submit error:', err);
+      setErrors({
+        ...errors,
+        general: `خطا در ثبت: ${err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.response?.data?.message || err.message}`,
+      });
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // استفاده از isLoading
     }
   };
 
@@ -188,11 +168,11 @@ const CreateVipPassenger = () => {
             </svg>
             <p>{nationalCodeError}</p>
           </div>
-        )}        <form onSubmit={handleSubmit}>
+        )}
+        {success && <p className="text-green-500 mb-4 text-center">{success}</p>}
+        <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="firstName">
-              نام
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="firstName">نام</label>
             <input
               type="text"
               id="firstName"
@@ -205,9 +185,7 @@ const CreateVipPassenger = () => {
             {errors.firstName && <p className="text-red-500 text-sm mt-1 text-right">{errors.firstName}</p>}
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="lastName">
-              نام خانوادگی
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="lastName">نام خانوادگی</label>
             <input
               type="text"
               id="lastName"
@@ -220,9 +198,7 @@ const CreateVipPassenger = () => {
             {errors.lastName && <p className="text-red-500 text-sm mt-1 text-right">{errors.lastName}</p>}
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="nationalCode">
-              کد ملی
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="nationalCode">کد ملی</label>
             <input
               type="text"
               id="nationalCode"
@@ -235,9 +211,7 @@ const CreateVipPassenger = () => {
             {errors.nationalCode && <p className="text-red-500 text-sm mt-1 text-right">{errors.nationalCode}</p>}
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="mobile">
-              شماره موبایل
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="mobile">شماره موبایل</label>
             <input
               type="text"
               id="mobile"
@@ -250,9 +224,7 @@ const CreateVipPassenger = () => {
             {errors.mobile && <p className="text-red-500 text-sm mt-1 text-right">{errors.mobile}</p>}
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="departureDate">
-              تاریخ رفت
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="departureDate">تاریخ رفت</label>
             <DateSelector
               onDateChange={(date) => handleDateChange(date, 'departureDate')}
               initialDate={formData.departureDate}
@@ -261,9 +233,7 @@ const CreateVipPassenger = () => {
             {errors.departureDate && <p className="text-red-500 text-sm mt-1 text-right">{errors.departureDate}</p>}
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="returnDate">
-              تاریخ برگشت
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="returnDate">تاریخ برگشت</label>
             <DateSelector
               onDateChange={(date) => handleDateChange(date, 'returnDate')}
               initialDate={formData.returnDate || '1404-04-01'}
@@ -271,9 +241,7 @@ const CreateVipPassenger = () => {
             />
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="birthDate">
-              تاریخ تولد
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="birthDate">تاریخ تولد</label>
             <DateSelector
               onDateChange={(date) => handleDateChange(date, 'birthDate')}
               initialDate={formData.birthDate}
@@ -282,9 +250,7 @@ const CreateVipPassenger = () => {
             {errors.birthDate && <p className="text-red-500 text-sm mt-1 text-right">{errors.birthDate}</p>}
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="gender">
-              جنسیت
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="gender">جنسیت</label>
             <select
               id="gender"
               name="gender"
@@ -300,9 +266,7 @@ const CreateVipPassenger = () => {
             {errors.gender && <p className="text-red-500 text-sm mt-1 text-right">{errors.gender}</p>}
           </div>
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianFirstName">
-              نام سرپرست
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianFirstName">نام سرپرست</label>
             <input
               type="text"
               id="guardianFirstName"
@@ -313,11 +277,8 @@ const CreateVipPassenger = () => {
             />
             {errors.guardianFirstName && <p className="text-red-500 text-sm mt-1 text-right">{errors.guardianFirstName}</p>}
           </div>
-
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianMobile">
-              موبایل سرپرست
-            </label>
+            <label className="block text-gray-700 mb-2 text-right" htmlFor="guardianMobile">موبایل سرپرست</label>
             <input
               type="text"
               id="guardianMobile"

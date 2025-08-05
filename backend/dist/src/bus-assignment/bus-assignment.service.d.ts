@@ -4,6 +4,12 @@ export declare class BusAssignmentService {
     private prisma;
     constructor(prisma: PrismaService);
     findAllWithPassengers(): Promise<({
+        busAssignment: {
+            company: string;
+            plate: string;
+            driver: string;
+            driverPhone: string;
+        } | null;
         passengers: {
             id: number;
             createdAt: Date;
@@ -21,12 +27,6 @@ export declare class BusAssignmentService {
             leaderPhone: string | null;
             createdById: number;
         }[];
-        busAssignment: {
-            company: string;
-            plate: string;
-            driver: string;
-            driverPhone: string;
-        } | null;
     } & {
         id: number;
         createdAt: Date;

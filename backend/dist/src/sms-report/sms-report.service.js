@@ -37,9 +37,16 @@ let SmsReportService = class SmsReportService {
                         smsStatusMap[sms.recipientPhone] = this.mapSmsStatus(sms.status);
                     }
                 });
+                const driverPhone = fc.busAssignment?.driverPhone;
+                const driverSmsStatus = driverPhone ? smsStatusMap[driverPhone] || 'تا کنون پیامکی ارسال نشده' : 'راننده‌ای تعیین نشده';
+                const passengers = fc.pack.passengers;
+                const leaderPhones = [...new Set(passengers.map(p => p.leaderPhone).filter(phone => phone !== null && phone !== undefined))];
+                const leaderSmsStatus = leaderPhones.length > 0
+                    ? leaderPhones.map(phone => smsStatusMap[phone] || 'تا کنون پیامکی ارسال نشده').join(', ')
+                    : 'مسئولی تعیین نشده';
                 return {
                     id: fc.packId,
-                    travelDate: fc.travelDate.toISOString().split('T')[0],
+                    travelDate: this.formatDate(fc.travelDate),
                     type: fc.pack.type,
                     status: fc.pack.status,
                     passengers: fc.pack.passengers.map((passenger) => ({
@@ -48,15 +55,22 @@ let SmsReportService = class SmsReportService {
                         lastName: passenger.lastName || '-',
                         nationalCode: passenger.nationalCode,
                         phone: passenger.phone,
-                        travelDate: passenger.travelDate,
-                        returnDate: passenger.returnDate || '-',
-                        birthDate: passenger.birthDate || '-',
+                        travelDate: this.formatDate(passenger.travelDate),
+                        returnDate: passenger.returnDate ? this.formatDate(passenger.returnDate) : '-',
+                        birthDate: passenger.birthDate ? this.formatDate(passenger.birthDate) : '-',
                         leaderName: passenger.leaderName || '-',
                         leaderPhone: passenger.leaderPhone || '-',
                         gender: passenger.gender,
-                        smsStatus: smsStatusMap[passenger.phone] || 'نرفته',
+                        smsStatus: smsStatusMap[passenger.phone] || 'تا کنون پیامکی ارسال نشده',
                     })),
-                    busAssignment: fc.busAssignment,
+                    busAssignment: {
+                        company: fc.busAssignment?.company || '-',
+                        plate: fc.busAssignment?.plate || '-',
+                        driver: fc.busAssignment?.driver || '-',
+                        driverPhone: fc.busAssignment?.driverPhone || '-',
+                        driverSmsStatus,
+                    },
+                    leaderSmsStatus,
                 };
             });
             return formattedPacks;
@@ -66,16 +80,22 @@ let SmsReportService = class SmsReportService {
             throw new Error('خطا در بارگذاری گزارشات ریز پیامک‌ها');
         }
     }
+    formatDate(date) {
+        if (!date)
+            return '-';
+        const d = new Date(date);
+        return d.toISOString().split('T')[0];
+    }
     mapSmsStatus(status) {
         switch (status.toLowerCase()) {
             case 'sent':
-                return 'نرفته';
-            case 'delivered':
-                return 'موفق';
+                return 'ارسال شده اما هنوز نرسیده';
+            case 'success':
+                return 'ارسال شده و رسیده';
             case 'failed':
-                return 'نرسیده';
+                return 'ارسال با خطا مواجه شده';
             default:
-                return 'نرفته';
+                return 'تا کنون پیامکی ارسال نشده';
         }
     }
 };
