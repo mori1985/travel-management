@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { axiosInstance, setLoading } from '../axiosConfig';
+import { axiosInstance } from '../axiosConfig';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import moment from 'jalali-moment';
 
@@ -55,7 +55,7 @@ const BusAssignment = () => {
 
   const fetchPacks = async () => {
     try {
-      setLoading(true);
+      //setLoading(true);
       const response = await axiosInstance.get('/bus-assignment/packs/bus-assignment');
       console.log('Fetched packs from /bus-assignment/packs/bus-assignment:', response.data);
       setPacks(response.data);
@@ -72,7 +72,7 @@ const BusAssignment = () => {
       alert('خطا در بارگذاری پک‌ها: ' + (err.message === 'چنین آدرسی وجود ندارد' ? 'چنین آدرسی وجود ندارد' : err.response?.data?.message || err.message || 'خطایی رخ داده است'));
       return null;
     } finally {
-      setLoading(false);
+      //setLoading(false);
     }
   };
 

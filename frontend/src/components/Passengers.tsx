@@ -1,7 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
-import { axiosInstance, setLoading } from '../axiosConfig';
-import { AuthContext } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { axiosInstance } from '../axiosConfig';
 import moment from 'jalali-moment';
 
 interface Passenger {
@@ -26,7 +24,7 @@ const PassengerSearch = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false); // اضافه کردن isLoading
-  const { token } = useContext(AuthContext);
+  //const { token } = useContext(AuthContext);
 
   const handleSearch = async () => {
     if (!nationalCode || nationalCode.length !== 10) {

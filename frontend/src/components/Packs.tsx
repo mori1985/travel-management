@@ -6,19 +6,19 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import EditPassengerModal from './EditPassengerModal';
 import moment from 'jalali-moment';
 
-interface Passenger {
-  id: number;
-  firstName: string;
-  lastName: string;
-  nationalCode: string;
-  phone: string;
-  travelDate: string;
-  returnDate?: string;
-  birthDate?: string;
-  leaderName?: string;
-  leaderPhone?: string;
-  gender: string;
-}
+export interface Passenger {
+    id: number;
+    firstName: string;
+    lastName: string;
+    nationalCode: string;
+    phone: string;
+    travelDate: string;
+    returnDate?: string;
+    birthDate?: string;
+    leaderName?: string;
+    leaderPhone?: string;
+    gender: string;
+  }
 
 interface Pack {
   id: number;
@@ -162,11 +162,11 @@ const Packs = () => {
           prevPacks.map((pack) =>
             pack.id === (prevPacks.find((p) => p.passengers.some((p) => p.id === passenger.id))?.id || 0)
               ? {
-                  ...pack,
-                  passengers: pack.passengers.map((p) =>
-                    p.id === passenger.id ? response.data : p
-                  ),
-                }
+                ...pack,
+                passengers: pack.passengers.map((p) =>
+                  p.id === passenger.id ? response.data : p
+                ),
+              }
               : pack
           )
         );
@@ -176,7 +176,7 @@ const Packs = () => {
       // حذف console.error برای کاهش شلوغی کنسول (اختیاری)
       // console.error('Error saving passenger:', err);
       if (err.response && err.response.status === 400) {
-        const errorMessage = err.response.data?.message || 'خطا در ثبت مسافر';
+        // const errorMessage = err.response.data?.message || 'خطا در ثبت مسافر';
         // فرض می‌کنیم مسافر ثبت شده، استیت رو با داده‌های ارسالی به‌روزرسانی می‌کنیم
         if (editModal.packId) {
           setPacks((prevPacks) =>

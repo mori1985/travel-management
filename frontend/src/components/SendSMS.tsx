@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../axiosConfig';
 
@@ -10,7 +10,8 @@ interface SmsMessage {
 interface SendSMSProps {
   packId: number;
   onClose: () => void;
-  onSend: () => Promise<void>; // تغییر به Promise<void>
+  onSend: () => Promise<void>;
+  loading?: boolean; // اضافه کردن این خط
 }
 
 const SendSMS = ({ packId, onClose, onSend }: SendSMSProps) => {

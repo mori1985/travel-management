@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { axiosInstance } from '../axiosConfig';
 import DateSelector from './DateSelector';
 import { Passenger } from './Packs';
@@ -13,8 +13,14 @@ interface EditPassengerModalProps {
   onCancel: () => void;
 }
 
+// رفع ارورهای index signature
+interface PassengerWithIndex extends Omit<Passenger, 'id'> {
+  id: number;
+  [key: string]: string | number | undefined;
+}
+
 const EditPassengerModal: React.FC<EditPassengerModalProps> = ({ show, passenger, packTravelDate, packId, onSave, onCancel }) => {
-  const [editedPassenger, setEditedPassenger] = useState<Passenger | undefined>(passenger);
+  const [editedPassenger, setEditedPassenger] = useState<PassengerWithIndex | undefined>(undefined);
   const [errors, setErrors] = useState<{ [key: string]: string }>({
     firstName: '', lastName: '', nationalCode: '', phone: '', birthDate: '', returnDate: '', general: '',
   });
@@ -23,10 +29,21 @@ const EditPassengerModal: React.FC<EditPassengerModalProps> = ({ show, passenger
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const initialPassenger = passenger || {
-      id: 0, firstName: '', lastName: '', nationalCode: '', phone: '', travelDate: packTravelDate,
-      returnDate: '1404-04-01', birthDate: '1404-01-01', leaderName: '', leaderPhone: '', gender: '',
-    };
+    const initialPassenger: PassengerWithIndex = passenger
+      ? { ...passenger }
+      : {
+          id: 0,
+          firstName: '',
+          lastName: '',
+          nationalCode: '',
+          phone: '',
+          travelDate: packTravelDate,
+          returnDate: '1404-04-01',
+          birthDate: '1404-01-01',
+          leaderName: '',
+          leaderPhone: '',
+          gender: '',
+        };
     setEditedPassenger(initialPassenger);
     setErrors({ firstName: '', lastName: '', nationalCode: '', phone: '', birthDate: '', returnDate: '', general: '' });
     setNationalCodeError('');
@@ -34,7 +51,8 @@ const EditPassengerModal: React.FC<EditPassengerModalProps> = ({ show, passenger
 
   if (!show || !editedPassenger) return null;
 
-  const validateField = (name: string, value: string) => {
+  const validateField = (name: string, value: string | undefined): string => {
+    if (value === undefined) return 'مقدار خالی است';
     switch (name) {
       case 'firstName': return value.length < 3 ? 'نام باید حداقل ۳ حرف باشد' : '';
       case 'lastName': return value.length < 3 ? 'نام خانوادگی باید حداقل ۳ حرف باشد' : '';
@@ -79,12 +97,12 @@ const EditPassengerModal: React.FC<EditPassengerModalProps> = ({ show, passenger
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = {
-      firstName: validateField('firstName', editedPassenger.firstName),
-      lastName: validateField('lastName', editedPassenger.lastName),
-      nationalCode: validateField('nationalCode', editedPassenger.nationalCode),
-      phone: validateField('phone', editedPassenger.phone),
-      birthDate: validateField('birthDate', editedPassenger.birthDate),
-      returnDate: validateField('returnDate', editedPassenger.returnDate),
+      firstName: validateField('firstName', editedPassenger.firstName as string),
+      lastName: validateField('lastName', editedPassenger.lastName as string),
+      nationalCode: validateField('nationalCode', editedPassenger.nationalCode as string),
+      phone: validateField('phone', editedPassenger.phone as string),
+      birthDate: validateField('birthDate', editedPassenger.birthDate as string),
+      returnDate: validateField('returnDate', editedPassenger.returnDate as string),
       general: '',
     };
     setErrors(newErrors);
@@ -92,13 +110,14 @@ const EditPassengerModal: React.FC<EditPassengerModalProps> = ({ show, passenger
     if (Object.values(newErrors).some((error) => error !== '')) return;
 
     if (editedPassenger.id === 0) {
-      if (!(await validateNationalCode(editedPassenger.nationalCode))) return;
+      if (!(await validateNationalCode(editedPassenger.nationalCode as string))) return;
     }
 
     setLoading(true);
     try {
       const passengerToSave = {
-        ...editedPassenger, travelDate: packTravelDate,
+        ...editedPassenger,
+        travelDate: packTravelDate,
         returnDate: editedPassenger.returnDate || undefined,
         birthDate: editedPassenger.birthDate,
         leaderName: editedPassenger.leaderName || undefined,

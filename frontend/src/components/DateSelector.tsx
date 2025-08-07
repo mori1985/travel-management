@@ -4,6 +4,8 @@ interface DateSelectorProps {
   initialDate: string;
   onDateChange: (date: string) => void;
   dateType: 'departure' | 'return' | 'birth';
+  disabled?: boolean; // ← این خط را اضافه کن
+
 }
 
 const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, dateType }) => {
