@@ -187,7 +187,7 @@ const Navbar = () => {
       </nav>
 
       {/* استایل‌های انیمیشن */}
-      <style >{`
+      <style>{`
         .animate-wave {
           animation: wave 4s infinite ease-in-out;
         }

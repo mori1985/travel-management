@@ -18,9 +18,37 @@ import AdminReport from './components/AdminReport';
 import SendSMS from './components/SendSMS';
 import SmsReport from './components/SmsReport';
 
+// کامپوننت جدید برای مدیریت رفرش در مسیر "/"
+const RootRedirect = () => {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    // فقط تو مسیر "/" و بار اول رفرش کن
+    if (location.pathname === '/') {
+      // چک می‌کنیم که قبلاً رفرش نشده باشه (با یه فلگ در sessionStorage)
+      const hasRefreshed = sessionStorage.getItem('hasRefreshed');
+      if (!hasRefreshed) {
+        console.log('Performing auto-refresh on root path');
+        sessionStorage.setItem('hasRefreshed', 'true');
+        window.location.reload();
+      }
+    }
+  }, [location.pathname]);
+
+  // بعد از رفرش، ریدایرکت به مسیر مناسب
+  return isAuthenticated ? (
+    <Navigate to={localStorage.getItem('role') === 'level1' ? '/passengers' : '/packs'} replace />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+};
+
 const AppContent = () => {
   const { token, setToken } = useAuth();
   const location = useLocation();
+
+  console.log('AppContent rendered, token:', token); // برای دیباگ
 
   useEffect(() => {
     const handleTokenExpired = () => {
@@ -34,7 +62,6 @@ const AppContent = () => {
     };
 
     window.addEventListener('tokenExpired', handleTokenExpired);
-
     return () => {
       window.removeEventListener('tokenExpired', handleTokenExpired);
     };
@@ -42,8 +69,9 @@ const AppContent = () => {
 
   return (
     <ErrorBoundary>
+      {location.pathname !== '/login' && <Navbar />}
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<h2 className="text-center mt-10">عدم دسترسی</h2>} />
         <Route element={<ProtectedRoute allowedRoles={['level1', 'level2', 'admin']} />}>
@@ -67,23 +95,16 @@ const AppContent = () => {
 };
 
 const App = () => {
+  console.log('App component rendered'); // برای دیباگ
   return (
     <AuthProvider>
       <BrowserRouter>
-        <ErrorBoundary> {/* ErrorBoundary دور Navbar هم اضافه شد */}
-          <Navbar />
-        </ErrorBoundary>
         <AppContent />
       </BrowserRouter>
     </AuthProvider>
   );
 };
 
-// رندر اصلی
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
 
 export default App;
