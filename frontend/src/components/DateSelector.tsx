@@ -10,7 +10,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, 
   const [selectedDate, setSelectedDate] = useState({ year: '', month: '', day: '' });
   const [isUserChange, setIsUserChange] = useState(false);
 
-  // مقدار اولیه تاریخ
   useEffect(() => {
     if (initialDate) {
       const [y, m, d] = initialDate.split('-');
@@ -19,11 +18,10 @@ const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, 
         month: m.padStart(2, '0'),
         day: d.padStart(2, '0'),
       });
-      setIsUserChange(false); // این تغییر توسط کاربر نیست
+      setIsUserChange(false);
     }
   }, [initialDate]);
 
-  // وقتی تاریخ تغییر می‌کنه، فقط اگه توسط کاربر باشه onDateChange رو صدا می‌زنیم
   useEffect(() => {
     if (isUserChange && selectedDate.year && selectedDate.month && selectedDate.day) {
       const newDate = `${selectedDate.year}-${selectedDate.month}-${selectedDate.day}`;
@@ -31,7 +29,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, 
     }
   }, [selectedDate, isUserChange, onDateChange]);
 
-  // گزینه‌های سال
   const getYears = () => {
     if (dateType === 'departure' || dateType === 'return') {
       return [1404];
@@ -45,7 +42,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, 
     return [];
   };
 
-  // گزینه‌های ماه
   const getMonths = () => {
     if (dateType === 'departure' || dateType === 'return') {
       return [
@@ -72,7 +68,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, 
     return [];
   };
 
-  // گزینه‌های روز بر اساس ماه
   const getDays = () => {
     if (dateType === 'departure' || dateType === 'return') {
       const days = [];
@@ -81,7 +76,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, 
       }
       return days;
     } else if (dateType === 'birth') {
-      const daysInMonth = {
+      const daysInMonth: Record<string, number> = {
         '01': 31, '02': 31, '03': 31, '04': 31, '05': 31, '06': 31,
         '07': 30, '08': 30, '09': 30, '10': 30, '11': 30, '12': 30,
       };
@@ -97,7 +92,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ initialDate, onDateChange, 
 
   const handleChange = (field: 'year' | 'month' | 'day', value: string) => {
     setSelectedDate((prev) => ({ ...prev, [field]: value }));
-    setIsUserChange(true); // این تغییر توسط کاربره
+    setIsUserChange(true);
   };
 
   return (

@@ -5,6 +5,7 @@ interface AuthContextType {
   role: string | null;
   setToken: (token: string | null) => void;
   setRole: (role: string | null) => void;
+  isAuthenticated: boolean; // اضافه کردن این خط
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -12,11 +13,13 @@ export const AuthContext = createContext<AuthContextType>({
   role: null,
   setToken: () => {},
   setRole: () => {},
+  isAuthenticated: false, // مقدار اولیه
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token') || null);
   const [role, setRole] = useState<string | null>(localStorage.getItem('role') || null);
+  const isAuthenticated = !!token; // محاسبه بر اساس وجود token
 
   const updateToken = (newToken: string | null) => {
     setToken(newToken);
@@ -37,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, role, setToken: updateToken, setRole: updateRole }}>
+    <AuthContext.Provider value={{ token, role, setToken: updateToken, setRole: updateRole, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

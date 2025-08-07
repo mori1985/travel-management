@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react'; // فقط useEffect رو نگه دار
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -23,7 +23,6 @@ const RootRedirect = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // فقط تو مسیر "/" و بار اول رفرش کن
     if (location.pathname === '/') {
       const hasRefreshed = sessionStorage.getItem('hasRefreshed');
       if (!hasRefreshed) {
@@ -34,7 +33,6 @@ const RootRedirect = () => {
     }
   }, [location.pathname]);
 
-  // ریدایرکت به مسیر مناسب
   return isAuthenticated ? (
     <Navigate to={localStorage.getItem('role') === 'level1' ? '/passengers' : '/packs'} replace />
   ) : (
@@ -46,7 +44,7 @@ const AppContent = () => {
   const { token, setToken } = useAuth();
   const location = useLocation();
 
-  console.log('AppContent rendered, token:', token); // برای دیباگ
+  console.log('AppContent rendered, token:', token);
 
   useEffect(() => {
     const handleTokenExpired = () => {
@@ -84,7 +82,7 @@ const AppContent = () => {
           <Route path="/bus-assignment" element={<BusAssignment />} />
           <Route path="/final-confirmation" element={<FinalConfirmation />} />
           <Route path="/admin-report" element={<AdminReport />} />
-          <Route path="/send-sms/:packId" element={<SendSMS />} />
+          <Route path="/send-sms/:packId" element={<SendSMS packId={0} onClose={() => {}} onSend={() => Promise.resolve()} />} />
           <Route path="/sms-report" element={<SmsReport />} />
         </Route>
       </Routes>
@@ -93,7 +91,7 @@ const AppContent = () => {
 };
 
 const App = () => {
-  console.log('App component rendered'); // برای دیباگ
+  console.log('App component rendered');
   return (
     <AuthProvider>
       <BrowserRouter>
