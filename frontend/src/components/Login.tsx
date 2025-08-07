@@ -1,12 +1,14 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { axiosInstance } from '../axiosConfig'; // استفاده از axiosInstance به‌جای axios
+import { useState, useContext, useEffect } from 'react';
+import { axiosInstance } from '../axiosConfig';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import './Login.css';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  console.log('Login component rendered'); // برای دیباگ رندر چندباره
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const { setToken, setRole } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,7 +21,7 @@ const Login = () => {
     }
   }, [location.search]);
 
-  const decodeToken = (token: string) => {
+  const decodeToken = (token: string): { role?: string } | null => {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -36,7 +38,7 @@ const Login = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log('Sending login request:', { username, password });
     try {
@@ -55,75 +57,52 @@ const Login = () => {
       localStorage.setItem('role', userRole);
 
       if (userRole === 'level1') {
-        navigate('/passengers');
+        navigate('/passengers', { replace: true });
       } else if (userRole === 'level2' || userRole === 'admin') {
-        navigate('/packs');
+        navigate('/packs', { replace: true });
       } else {
-        navigate('/');
+        navigate('/', { replace: true });
       }
     } catch (err: any) {
       console.error('Login error:', err.response?.data || err.message);
-      setError(`ورود ناموفق: ${err.response?.data?.message || err.message || 'مشکلی رخ داده است. لطفاً دوباره امتحان کنید.'}`);
+      setError(`ورود ناموفق: ${err.response?.data?.message || err.message || 'مشکلی رخ داده است.'}`);
     }
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{
-        backgroundImage: `url('/login-background.jpg')`,
-        backgroundSize: 'contain',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#e6f0fa',
-      }}
-    >
-      {/* Overlay برای تنظیم روشنایی و کنتراست */}
-      <div className="absolute inset-0 bg-black opacity-40"></div>
-
-      <div
-        className="p-8 rounded-xl shadow-2xl w-full max-w-md z-10 transform transition-all hover:scale-105 animate-fade-in"
-        style={{
-          backgroundColor: 'rgba(230, 240, 250, 0.3)',
-          backdropFilter: 'blur(5px)',
-          WebkitBackdropFilter: 'blur(5px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-        }}
-      >
-        <h2 className="text-4xl font-bold mb-6 text-center text-blue-700">ورود به سیستم</h2>
-        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+    <div className="login-page">
+      <div className="overlay"></div>
+      <div className="login-container">
+        <h2 className="text-4xl font-bold mb-6 text-center text-blue-700">سامانه مدیریت مسافرین</h2>
+        {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="mb-5">
-            <label className="block text-gray-700 mb-2 text-right font-semibold" htmlFor="username">
+            <label className="form-label" htmlFor="username-input">
               نام کاربری
             </label>
             <input
               type="text"
-              id="username"
+              id="username-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-right bg-gray-50"
+              className="form-input"
               required
             />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2 text-right font-semibold" htmlFor="password">
+            <label className="form-label" htmlFor="password-input">
               رمز عبور
             </label>
             <input
               type="password"
-              id="password"
+              id="password-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-right bg-gray-50"
+              className="form-input"
               required
             />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold shadow-md hover:shadow-lg"
-          >
+          <button type="submit" className="submit-button">
             ورود
           </button>
         </form>

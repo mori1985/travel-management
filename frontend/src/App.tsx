@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,7 +17,7 @@ import AdminReport from './components/AdminReport';
 import SendSMS from './components/SendSMS';
 import SmsReport from './components/SmsReport';
 
-// کامپوننت جدید برای مدیریت رفرش در مسیر "/"
+// کامپوننت برای مدیریت رفرش در مسیر "/"
 const RootRedirect = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
@@ -26,7 +25,6 @@ const RootRedirect = () => {
   useEffect(() => {
     // فقط تو مسیر "/" و بار اول رفرش کن
     if (location.pathname === '/') {
-      // چک می‌کنیم که قبلاً رفرش نشده باشه (با یه فلگ در sessionStorage)
       const hasRefreshed = sessionStorage.getItem('hasRefreshed');
       if (!hasRefreshed) {
         console.log('Performing auto-refresh on root path');
@@ -36,7 +34,7 @@ const RootRedirect = () => {
     }
   }, [location.pathname]);
 
-  // بعد از رفرش، ریدایرکت به مسیر مناسب
+  // ریدایرکت به مسیر مناسب
   return isAuthenticated ? (
     <Navigate to={localStorage.getItem('role') === 'level1' ? '/passengers' : '/packs'} replace />
   ) : (
@@ -69,7 +67,7 @@ const AppContent = () => {
 
   return (
     <ErrorBoundary>
-      {location.pathname !== '/login' && <Navbar />}
+      {location.pathname !== '/login' && location.pathname !== '/' && <Navbar />}
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<Login />} />
@@ -104,7 +102,5 @@ const App = () => {
     </AuthProvider>
   );
 };
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
 
 export default App;
